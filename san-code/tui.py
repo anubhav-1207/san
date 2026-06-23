@@ -19,6 +19,7 @@ class SANTextArea(TextArea):
     # --- Auto-indent and braces completion ---------------------------------
     async def _on_key(self, event: events.Key) -> None:
         if not self.read_only:
+            
             # "{" and insert "{}"" and place cursor between
             if event.character == "{":
                 event.stop()
@@ -27,6 +28,7 @@ class SANTextArea(TextArea):
                 self._replace_via_keyboard("{}", s, e)
                 self.move_cursor((s[0], s[1] + 1))
                 return
+            
             # smart indent (may be broken.)
             if event.key == "enter":
                 event.stop()
@@ -34,6 +36,7 @@ class SANTextArea(TextArea):
                 s, e = self.selection
                 line = self.document[s[0]]
                 ind = len(line) - len(line.lstrip())  # current indent level
+                
                 if line.strip() == "{}":
                     # Expand `{}` into three lines with cursor in the middle
                     self._replace_via_keyboard(
@@ -42,11 +45,13 @@ class SANTextArea(TextArea):
                         (s[0], len(line)),
                     )
                     self.move_cursor((s[0] + 1, ind + self.indent_width))
+                
                 elif line.strip().endswith("{"):
                     # Indent one level deeper after `{`
                     self._replace_via_keyboard(
                         f"\n{' ' * (ind + self.indent_width)}", s, e
                     )
+                
                 else:
                     # Keep same indent level
                     self._replace_via_keyboard(f"\n{' ' * ind}", s, e)
@@ -74,7 +79,7 @@ class SaveScreen(Screen):
 
 class SANEditor(App):
     BINDINGS = [("ctrl+s", "save_file", "Save")]
-    CSS = "TextArea { background: #1e1e1e; color: white; }"
+    CSS = "TextArea { background: #13111C; color: white; }"
 
     def __init__(self, initial_text="", **kwargs):
         self._initial_text = initial_text
