@@ -1,2 +1,4 @@
 flask
 gunicorn
+textual[syntax]
+pygments
