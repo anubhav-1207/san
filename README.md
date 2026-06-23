@@ -51,6 +51,17 @@ Run `main.py`
 python main.py <file.san>
 ```
 
+### To use the GUI code editor for San, use:
+- Just the editor
+```bash
+python san-code/main.py
+```
+
+- Launch a file in the editor
+```bash
+python san-code/main.py filepath.san
+```
+
 # Language Guide 
 ## Variables 
 ```c
