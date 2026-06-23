@@ -51,7 +51,7 @@ Run `main.py`
 python main.py <file.san>
 ```
 
-### To use the GUI code editor for San, use:
+### To use the TUI code editor for San, use:
 - Just the editor
 ```bash
 python san-code/main.py
