@@ -6,7 +6,11 @@
 #---Error Classes-------------------------------------------------------------------------------
 class AccidentalReassError(Exception):
     def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental variable '{var} already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR002]")
+        super().__init__(f"class source.fatal:: environmental variable '{var} already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001]")
+
+class UndefinedVariable(Exception):
+    def __init__(self,var):
+        super().__init__(f"class source.fatal:: environmental variable '{var} is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002]")
 
 
 
@@ -35,7 +39,7 @@ class Environment:
         if self.parent:
             return self.parent.lookup(name)
         else:
-            raise Exception("Variable not found")
+            raise UndefinedVariable(name)
     
     def reassign_var(self,name,value):
         if name in self.vars:
@@ -151,7 +155,7 @@ class Evaluator:
         value = self.evaluate(node.value_node)
         const = node.is_const
         self.current_env.define(name,value,const)
-        print(f"DEBUG: Defined {node.var_name_token.token_value} = {value}")
+        # print(f"DEBUG: Defined {node.var_name_token.token_value} = {value}")
         return value
     
     def visit_VarReassignNode(self,node):
