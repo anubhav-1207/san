@@ -36,8 +36,8 @@ def run_file(filename,pipeline_flags):
                 print(Fore.LIGHTMAGENTA_EX + "[+]" + Fore.BLUE+f'{ast}')
                 evaluator = Evaluator()
                 print(Fore.CYAN + "[-]" + Fore.GREEN+"Recieved AST")
-                evaluator.evaluate(ast)
                 print(Fore.CYAN + "[-]" + Fore.GREEN+"Evaluated AST")
+                evaluator.evaluate(ast)
 
         else:
             lexer = Lexer(source)

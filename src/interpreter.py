@@ -149,8 +149,9 @@ class Evaluator:
     def visit_VarAssignNode(self,node):
         name = node.var_name_token.token_value
         value = self.evaluate(node.value_node)
-        self.current_env.define(name,value)
-        # print(f"DEBUG: Defined {node.var_name_token.token_value} = {value}")
+        const = node.is_const
+        self.current_env.define(name,value,const)
+        print(f"DEBUG: Defined {node.var_name_token.token_value} = {value}")
         return value
     
     def visit_VarReassignNode(self,node):

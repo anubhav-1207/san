@@ -213,7 +213,13 @@ class Parser:
         Parses statements.
         """
         if self.current_token and self.current_token.token_value in ('dec','const'):
-            is_const = (self.current_token.token_value == 'const')
+            # is_const = (self.current_token.token_value == 'const')
+
+            if self.current_token.token_value == 'const':
+                is_const = True
+            else:
+                is_const = False
+
             self.expect([self.current_token.type_])
             var_name_token = self.expect([TT_IDENT])
             self.expect([TT_EQ])
