@@ -12,6 +12,14 @@ class UndefinedVariable(Exception):
     def __init__(self,var):
         super().__init__(f"class source.fatal:: environmental variable '{var} is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002]")
 
+class ConstantMutation(Exception):
+    def __init__(self,var):
+        super().__init__(f"class source.fatal:: environmental constant '{var} is a constant,even explicit reassignment not allowed,\n\t\t---> interpreter exited with error[#INTRPTR003]")
+
+class ZeroDivisionError(Exception):
+    def __init__(self,right,left):
+        super().__init__(f"class source.fatal:: cannot divide by zero, mathematically undefined,\n\t\t---> undefined operation '{right}/{left}' interpreter exited with error[#INTRPTR004]")
+
 
 
 #---Visitor Nodes-------------------------------------------------------------------------------
@@ -45,7 +53,7 @@ class Environment:
         if name in self.vars:
             val, is_const = self.vars[name]
             if is_const:
-                raise Exception("Cannot flux a constant")
+                raise ConstantMutation(name)
             else:
                 self.vars[name] = (value,is_const)
                 return 
@@ -55,7 +63,7 @@ class Environment:
             return 
         
         else:
-            raise Exception("Undefined variable")
+            raise UndefinedVariable(name)
 
 
 class Evaluator:
@@ -125,7 +133,7 @@ class Evaluator:
             if right != 0:
                 return left // right
             else:
-                raise Exception('Zero divison error')
+                raise ZeroDivisionError(right,left)
         elif operator == '**':
             return left ** right
         elif operator == '>':
