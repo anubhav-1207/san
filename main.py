@@ -36,31 +36,39 @@ def run_file(filename,pipeline_flags=False):
         if pipeline_flags: # when user wants to read the tokens and ASTs
             if pipeline_flags == 'explicit':
                 lexer = Lexer(source)
-                print(Fore.CYAN + "\n[-]" + Fore.GREEN+" Input source read")
+                print(Fore.RED+"\n====================================================")
+                print(Fore.CYAN + "[-]" + Fore.GREEN+" Input source read")
+                print(Fore.RED+"\n====================================================")
                 
                 tokens = lexer.tokenise()
                 
-                print(Fore.CYAN + "\n[!]" + Fore.GREEN+"Initialising Lexer")
-                print(Fore.CYAN + "\t[-]" + Fore.GREEN+"Tokenisation Finished")
+                print(Fore.RED+"\n====================================================")
+                print(Fore.CYAN + "\n[!]" + Fore.GREEN+" Initialising Lexer")
+                print(Fore.CYAN + "\t[-]" + Fore.GREEN+" Tokenisation Finished")
                 
                 for tok in tokens:
                     print(Fore.LIGHTMAGENTA_EX + "\t\t[+]" + Fore.BLUE+f"{tok}")
-                
+
                 parser = Parser(tokens)
                 
-                print(Fore.CYAN + "\n\t[-]" + Fore.GREEN+"Passed tokens")
+                print(Fore.CYAN + "\n\t[-]" + Fore.GREEN+" Passed tokens")
                 
+                print(Fore.RED+"\n====================================================")
                 ast = parser.parse()
                 
-                print(Fore.CYAN + "\n[!]" + Fore.GREEN+"Initialising Parser")
-                print(Fore.CYAN + "\t[-]" + Fore.GREEN+"Finished parsing")
+                print(Fore.CYAN + "\n[!]" + Fore.GREEN+" Initialising Parser")
+                print(Fore.CYAN + "\t[-]" + Fore.GREEN+" Finished parsing")
                 print(Fore.LIGHTMAGENTA_EX + "\n[+]" + Fore.BLUE+f'{ast}')
+                print(Fore.RED+"\n====================================================")
                 
+                print(Fore.RED+"\n====================================================")
                 evaluator = Evaluator()
-                print(Fore.CYAN + "\n\t[-]" + Fore.GREEN+"Recieved AST")
-                print(Fore.CYAN + "\t[-]" + Fore.GREEN+"Evaluated AST")
-                print(Fore.BLUE+"\n============================OUTPUT===============================")
+                print(Fore.CYAN + "\n\t[-]" + Fore.GREEN+" Recieved AST")
+                print(Fore.CYAN + "\t[-]" + Fore.GREEN+" Evaluated AST")
+                print(Fore.RED+"\n====================================================")
                 
+                print(Fore.BLUE+"\n=====================OUTPUT=========================")
+                print(Fore.CYAN + "[-]" + Fore.GREEN+" Evaluating")
                 evaluator.evaluate(ast)
 
         else: # running without the 'explicit' tag

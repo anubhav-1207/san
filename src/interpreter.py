@@ -264,7 +264,7 @@ class Evaluator:
     
     def visit_BreakNode(self,node):
         raise BreakException()
-    
+
     def visit_ReturnNode(self,node):
         value = self.evaluate(node.value) if node.value else None
         raise ReturnException(value)
