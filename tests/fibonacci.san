@@ -4,4 +4,5 @@ func fib(n) {
   }
   return fib(n - 1) + fib(n - 2)
 }
-stdout(fib(10))
+
+stdout(fib(10)

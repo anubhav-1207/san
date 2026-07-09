@@ -1,14 +1,26 @@
+#main.py
+#------------------------------------------------------------------------
+# The entry point for San. 
+# All programmes start from here 
+#----------------------------------------------------------------------------------------------------
+#---Importing Dependencies---------------------------------------------
+import sys
 import src
 import colorama
 from colorama import Fore, init
 from src.scanner import Lexer, InvalidTokenError, UnterminatedStringLiteral, InvalidIdentifier, InvalidFloatLiteral, UnintialisedStringLiteral
 from src.parser import *
 from src.interpreter import Evaluator
-import sys
 
+#---Setup autoreset to white color--------------------------------------
 init(autoreset = True)
 
-def run_file(filename,pipeline_flags):
+#---File Runner Function-------------------------------------------------------------------
+def run_file(filename,pipeline_flags=False):
+    """
+    Reads the terminal input and runs the file.
+    """
+
     if not filename.endswith('.san'):
         print(Fore.RED + "Error: File must have .san extension")
         return
@@ -21,25 +33,37 @@ def run_file(filename,pipeline_flags):
         return
     
     try:
-        if pipeline_flags:
+        if pipeline_flags: # when user wants to read the tokens and ASTs
             if pipeline_flags == 'explicit':
                 lexer = Lexer(source)
-                print(Fore.CYAN + "[-]" + Fore.GREEN+" Input source read")
+                print(Fore.CYAN + "\n[-]" + Fore.GREEN+" Input source read")
+                
                 tokens = lexer.tokenise()
-                print(Fore.CYAN + "[-]" + Fore.GREEN+"Tokenisation Finished")
+                
+                print(Fore.CYAN + "\n[!]" + Fore.GREEN+"Initialising Lexer")
+                print(Fore.CYAN + "\t[-]" + Fore.GREEN+"Tokenisation Finished")
+                
                 for tok in tokens:
-                    print(Fore.CYAN + "[+]" + Fore.BLUE+f"{tok}")
+                    print(Fore.LIGHTMAGENTA_EX + "\t\t[+]" + Fore.BLUE+f"{tok}")
+                
                 parser = Parser(tokens)
-                print(Fore.CYAN + "[-]" + Fore.GREEN+"Passed tokens")
+                
+                print(Fore.CYAN + "\n\t[-]" + Fore.GREEN+"Passed tokens")
+                
                 ast = parser.parse()
-                print(Fore.CYAN + "[-]" + Fore.GREEN+"Finished parsing")
-                print(Fore.LIGHTMAGENTA_EX + "[+]" + Fore.BLUE+f'{ast}')
+                
+                print(Fore.CYAN + "\n[!]" + Fore.GREEN+"Initialising Parser")
+                print(Fore.CYAN + "\t[-]" + Fore.GREEN+"Finished parsing")
+                print(Fore.LIGHTMAGENTA_EX + "\n[+]" + Fore.BLUE+f'{ast}')
+                
                 evaluator = Evaluator()
-                print(Fore.CYAN + "[-]" + Fore.GREEN+"Recieved AST")
-                print(Fore.CYAN + "[-]" + Fore.GREEN+"Evaluated AST")
+                print(Fore.CYAN + "\n\t[-]" + Fore.GREEN+"Recieved AST")
+                print(Fore.CYAN + "\t[-]" + Fore.GREEN+"Evaluated AST")
+                print(Fore.BLUE+"\n============================OUTPUT===============================")
+                
                 evaluator.evaluate(ast)
 
-        else:
+        else: # running without the 'explicit' tag
             lexer = Lexer(source)
             tokens = lexer.tokenise()
             parser = Parser(tokens)
@@ -50,11 +74,22 @@ def run_file(filename,pipeline_flags):
     except (InvalidTokenError, UnterminatedStringLiteral, InvalidIdentifier, InvalidFloatLiteral, UnintialisedStringLiteral) as e:
         print(Fore.RED+f"{e.__class__.__name__}: {e}")
 
+#---Running The File------------------------------------------------------------------
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python main.py <file.san>")
     
-    pipeline_flags = sys.argv[2]
+    elif len(sys.argv) == 3:
+        pipeline_flags = sys.argv[2]
+        
+        run_file(sys.argv[1],pipeline_flags)
+        sys.exit(1)
     
-    run_file(sys.argv[1],pipeline_flags)
-    sys.exit(1)
+    else:
+        run_file(sys.argv[1])
+        sys.exit(1)
+#=====================================================================================
+
+###############################################################################
+#                           END OF FILE
+###############################################################################

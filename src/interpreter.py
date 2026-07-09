@@ -31,17 +31,26 @@ class ReturnException(Exception):
         self.value = value
 
 class Environment:
+    """
+    Creates a namespace to store variables.
+    """
     def __init__(self,parent=None):
         self.parent = parent
         self.vars = {}
 
     def define(self,name,value,is_const=False):
+        """
+        Adds the variable and its value to namespace.
+        """
         if name in self.vars:
             raise AccidentalReassError(name)
         else:
             self.vars[name] = (value, is_const)
     
     def lookup(self,name):
+        """
+        Searches for a variable in the global and parent scope. 
+        """
         if name in self.vars:
             return self.vars[name][0]
         if self.parent:
@@ -50,6 +59,9 @@ class Environment:
             raise UndefinedVariable(name)
     
     def reassign_var(self,name,value):
+        """
+        Reassigns the variable if not a consant.
+        """
         if name in self.vars:
             val, is_const = self.vars[name]
             if is_const:
@@ -73,6 +85,9 @@ class Evaluator:
         self.functions = {}
     
     def evaluate(self,node):
+        """
+        Gets the node name and visits the node.
+        """
         method_name = f"visit_{node.__class__.__name__}"
         visitor = getattr(self,method_name,None)
         if visitor is None:
@@ -85,7 +100,11 @@ class Evaluator:
             result = self.evaluate(statement)
         return result
 
-    def is_truthy(self,operand):
+    def is_truthy(self,operand) -> bool:
+        """
+        Defining truthy and false operations.
+        Returns -> True or False
+        """
         if operand is None or operand is False:
             return False
         if operand == 0:
@@ -163,7 +182,6 @@ class Evaluator:
         value = self.evaluate(node.value_node)
         const = node.is_const
         self.current_env.define(name,value,const)
-        # print(f"DEBUG: Defined {node.var_name_token.token_value} = {value}")
         return value
     
     def visit_VarReassignNode(self,node):
