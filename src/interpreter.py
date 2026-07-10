@@ -6,29 +6,31 @@
 #---Error Classes-------------------------------------------------------------------------------
 class AccidentalReassError(Exception):
     def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental variable '{var} already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001]")
+        super().__init__(f"class source.fatal:: environmental variable '{var}' already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001]")
 
 class UndefinedVariable(Exception):
     def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental variable '{var} is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002]")
+        super().__init__(f"class source.fatal:: environmental variable '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002]")
 
 class ConstantMutation(Exception):
     def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental constant '{var} is a constant,even explicit reassignment not allowed,\n\t\t---> interpreter exited with error[#INTRPTR003]")
+        super().__init__(f"class source.fatal:: environmental constant '{var}' is a constant,even explicit reassignment not allowed,\n\t\t---> interpreter exited with error[#INTRPTR003]")
 
 class ZeroDivisionError(Exception):
     def __init__(self,right,left):
         super().__init__(f"class source.fatal:: cannot divide by zero, mathematically undefined,\n\t\t---> undefined operation '{right}/{left}' interpreter exited with error[#INTRPTR004]")
 
+class UndefinedFunc(Exception):
+    def __init__(self,var):
+        super().__init__(f"class source.recursive:: function '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR005]")
 
-
-#---Visitor Nodes-------------------------------------------------------------------------------
 class BreakException(Exception):
     pass
 
 class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
+#---Visitor Nodes-------------------------------------------------------------------------------
 
 class Environment:
     """
@@ -238,7 +240,8 @@ class Evaluator:
     
     def visit_FuncCallNode(self, node):
         if node.func_name not in self.functions:
-            raise Exception(f"FUNC UNDEFINED {node.func_name}")
+            # raise Exception(f"FUNC UNDEFINED {node.func_name}")
+            raise UndefinedFunc(node.func_name)
         
         func_def = self.functions[node.func_name]
         func_env = Environment(parent=self.current_env)

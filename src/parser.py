@@ -1,12 +1,13 @@
 #parser.py
-#===============================================================================
-#A parser goes through the list of tokens and produces an AST from it, discarding all irrelevant tokens.
-#===============================================================================
+#==============================================================================================
+#A parser goes through the list of tokens and produces an AST from it, discarding all irrelevant 
+#tokens.
+#==============================================================================================
 from src.ast_nodes import *
 from src.scanner import *
 
 #---Error Classes--------------------------------------------------------------------
-class UnexpectedTokenError(Exception):
+class UnexpectedTokenError(Exception): 
     def __init__(self,token,expected_token,line,col):
         super().__init__(f"class source.fatal:: private unexpected token found while parsing '{token}' instead of {expected_token},\n\t\t---> parser exited with error[#PAR001], line:col {line}:{col}")
 
@@ -68,7 +69,7 @@ class Parser:
     #---OR Parser------------------------------------------------
     def parse_logical_or(self):
         """
-        Parser '||' operator.
+        Parses '||' operator.
         """
         left = self.parse_logical_and()
         while self.current_token and self.match([TT_OR]):

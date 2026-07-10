@@ -120,7 +120,8 @@ class Lexer:
         self.col = 0
         self.tokens = []
     def __repr__(self) -> None:
-        return f"Token({Tokens.token_type}:{Tokens.token_value})" # type: ignore
+        return f"Token({Tokens.token_type}:{Tokens.token_value})" 
+
 
     
     #---Current Character------------------------------------------------------------
@@ -238,7 +239,7 @@ class Lexer:
                 self.col = 1
 
             #---Spaces----------------------
-            elif char.isspace(): # type: ignore
+            elif char.isspace(): 
                 self.advance()
             
             #---Equals----------------------
@@ -250,6 +251,7 @@ class Lexer:
                 else:
                     self.add(TT_EQ,self.line,'=')
                     self.advance()
+            
             #---Greater--------------------
             elif char == '>':
                 if self.peek() == '=':
@@ -300,8 +302,7 @@ class Lexer:
                 else:
                     self.add(TT_STAR,self.line,'*')
                     self.advance()
-
-                    
+        
             #---Slash------------------------
             elif char == '/':
                 if self.peek() == '/':
@@ -338,7 +339,7 @@ class Lexer:
            
            #---Strings----------------------
             elif char in ('"',"'"):
-                if self.peek() not in ALPHABETS or self.peek() not in NUMBERS or self.peek() not in SYMBOLS: # type: ignore
+                if self.peek() not in ALPHABETS or self.peek() not in NUMBERS or self.peek() not in SYMBOLS: 
                     string_initialiser = char
                     self.advance()
                     read_strings(self,string_initialiser)
@@ -346,11 +347,11 @@ class Lexer:
                     raise UnterminatedStringLiteral(self.line,self.col)
                 
             #---Keywords or Identifiers---------
-            elif char in ALPHABETS or char == '_': # type: ignore
+            elif char in ALPHABETS or char == '_': 
                 read_ident(self)
             
             #---Numbers----------------------
-            elif char in NUMBERS: # type: ignore
+            elif char in NUMBERS: 
                 read_numbers(self)
             
             else:
@@ -361,6 +362,6 @@ class Lexer:
         self.add(TT_EOF,self.line)            
         return self.tokens
 
-#=========================================================================================================
+#====================================================================
 #END OF FILE
-#=========================================================================================================
+#====================================================================

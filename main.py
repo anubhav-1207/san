@@ -10,7 +10,7 @@ import colorama
 from colorama import Fore, init
 from src.scanner import Lexer, InvalidTokenError, UnterminatedStringLiteral, InvalidIdentifier, InvalidFloatLiteral, UnintialisedStringLiteral
 from src.parser import *
-from src.interpreter import Evaluator
+from src.interpreter import *
 
 #---Setup autoreset to white color--------------------------------------
 init(autoreset = True)
@@ -79,7 +79,7 @@ def run_file(filename,pipeline_flags=False):
             evaluator = Evaluator()
             evaluator.evaluate(ast)
 
-    except (InvalidTokenError, UnterminatedStringLiteral, InvalidIdentifier, InvalidFloatLiteral, UnintialisedStringLiteral) as e:
+    except (InvalidTokenError, UnterminatedStringLiteral, InvalidIdentifier, InvalidFloatLiteral, UnintialisedStringLiteral,UnexpectedTokenError,ControlFLowError, NullFuncBody,AccidentalReassError,UndefinedVariable,ConstantMutation,UndefinedFunc,ZeroDivisionError) as e:
         print(Fore.RED+f"{e.__class__.__name__}: {e}")
 
 #---Running The File------------------------------------------------------------------
