@@ -296,9 +296,12 @@ class Parser:
             self.expect([self.current_token.type_])
             self.expect(TT_LPAREN)
             variable = self.current_token.token_value
-            self.expect([TT_IDENT])
+            self.advance()
+            self.expect([TT_COLON])
+            type_ = self.current_token.token_value
+            self.advance()
             self.expect([TT_RPAREN])
-            return ScanNode(variable)
+            return ScanNode(variable,type_)
         
         else:
             expr = self.parse_logical_or()

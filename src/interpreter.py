@@ -24,6 +24,18 @@ class UndefinedFunc(Exception):
     def __init__(self,var):
         super().__init__(f"class source.recursive:: function '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR005]")
 
+class InvalidTypeConv(Exception):
+    def __init__(self,var,type_):
+        super().__init__(f"class source.fatal:: variable '{var}' is not of the required type '{type_}', cannot perform implicit type conversion - type mismatch,\n\t\t---> interpreter exited with error[#INTRPTR006]")
+
+class MalformedTypeOperation(Exception):
+    def __init__(self):
+        super().__init__(f"class source.fatal:: operation is not of the required type, cannot perform operation - supported type operations:\nint + float\nint - float\nint * float\nint / float\nint // float\nint % float\\nint ** float \nbool + int\nbool + float\nstr * int,\n\t\t---> interpreter exited with error[#INTRPTR006]")
+
+class UnrecognisedBinaryOp(Exception):
+    def __init__(self,op):
+        super().__init__(f"class source.non-fatal:: unrecognised binary operator encountered - this error was not even possible to occur, if it did, congratulations, you went horribly wrong somewhere. You're on your own now - '{op}' ,\n\t\t---> interpreter exited with error[#INTRPTR006]")
+
 class BreakException(Exception):
     pass
 
@@ -145,36 +157,84 @@ class Evaluator:
         right = self.evaluate(node.right)
 
         if operator == '+':
-            return left + right
+            try:
+                return left + right
+            except TypeError:
+                raise MalformedTypeOperation()
+
         elif operator == '-':
-            return left - right
+            try:
+                return left - right
+            except TypeError:
+                raise MalformedTypeOperation()
+
         elif operator == '*':
-            return left * right
+            try:
+                return left * right
+            except TypeError:
+                raise MalformedTypeOperation()
+        
         elif operator == '/':
             if right != 0:
                 return left // right
             else:
                 raise ZeroDivisionError(right,left)
         elif operator == '**':
-            return left ** right
+            try:
+                return left ** right
+            except TypeError:
+                raise MalformedTypeOperation()
+
         elif operator == '>':
-            return left > right
+            try:
+                return left > right
+            except TypeError:
+                raise MalformedTypeOperation()
+
         elif operator == '<':
-            return left < right
+            try:
+                return left < right
+            except TypeError:
+                raise MalformedTypeOperation()
+
         elif operator == '<=':
-            return left <= right
+            try:
+                return left <= right
+            except TypeError:
+                raise MalformedTypeOperation()
+
         elif operator == '>=':
-            return left >= right
+            try:
+                return left >= right
+            except TypeError:
+                raise MalformedTypeOperation()
+
         elif operator == '==':
-            return left == right
+            try:
+                return left == right
+            except TypeError:
+                raise MalformedTypeOperation()
+
         elif operator == '!=':
-            return left != right
+            try:
+                return left != right
+            except TypeError:
+                raise MalformedTypeOperation()
+
         elif operator == '&&':
-            return self.is_truthy(left) and self.is_truthy(right)
+            try:
+                return self.is_truthy(left) and self.is_truthy(right)
+            except TypeError:
+                raise MalformedTypeOperation()
+
         elif operator == '||':
-            return self.is_truthy(left) or self.is_truthy(right)
+            try:
+                return self.is_truthy(left) or self.is_truthy(right)
+            except TypeError:
+                raise MalformedTypeOperation()
+
         else:
-            raise Exception(f"Unknown binary operator: {node.op}")
+            raise UnrecognisedBinaryOp(operator)
     
     def visit_VarAccessNode(self,node):
         return self.current_env.lookup(node.var_name_token.token_value)
@@ -199,10 +259,32 @@ class Evaluator:
     
     def visit_ScanNode(self,node):
         user_input = input()
-        try:
-            value = float(user_input)
-        except ValueError:
-            value = user_input
+        type_ = node.type_
+        
+        if type_ == 'int':
+            try:
+                value = int(user_input)
+            except ValueError:
+                raise InvalidTypeConv(node.variable,type_)
+
+        elif type_ == 'float':
+            try:
+                value = float(user_input)
+            except ValueError:
+                raise InvalidTypeConv(node.variable,type_)
+
+        elif type_ == 'str':
+            try:
+                value = str(user_input)
+            except ValueError:
+                raise InvalidTypeConv(node.variable,type_)
+
+        elif type_ == 'bool':
+            try:
+                value = bool(user_input)
+            except ValueError:
+                raise InvalidTypeConv(node.variable,type_)
+
         self.current_env.define(node.variable,value)
         return value
     

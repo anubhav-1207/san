@@ -68,7 +68,8 @@ KEYWORDS = {
     'stdout', 'scan',
     'Null',
     'use', 'type', 'init', 'ext',
-    'try', 'catch', 'drop'
+    'try', 'catch', 'drop',
+    'int','float','str','bool'
 }
 
 NUMBERS = "1234567890"

@@ -169,10 +169,11 @@ class StdOutNode(AST):
 
 #---Scan Node--------------------------------------------------------
 class ScanNode(AST):
-    def __init__(self,variable):
+    def __init__(self,variable,type_):
         self.variable = variable
+        self.type_ = type_
     def __repr__(self):
-        return f"(SCAN {self.variable})"
+        return f"(SCAN {self.variable}:{self.type_})"
 #---------------------------------------------------------------------
 
 #####################################################################
