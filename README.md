@@ -10,7 +10,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-![Lines of Code](https://img.shields.io/badge/Lines%20of%20Code-~1000-brightgreen)
+![Lines of Code](https://img.shields.io/badge/Lines%20of%20Code-~1,410-brightgreen)
 
 ![Status](https://img.shields.io/badge/Status-Complete-success)
 

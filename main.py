@@ -8,19 +8,19 @@ import sys
 import src
 import colorama
 from colorama import Fore, init
-from src.scanner import Lexer, InvalidTokenError, UnterminatedStringLiteral, InvalidIdentifier, InvalidFloatLiteral, UnintialisedStringLiteral
+from src.scanner import *
 from src.parser import *
 from src.interpreter import *
 
 #---Setup autoreset to white color--------------------------------------
 init(autoreset = True)
+#-----------------------------------------------------------------------
 
 #---File Runner Function-------------------------------------------------------------------
 def run_file(filename,pipeline_flags=False):
     """
     Reads the terminal input and runs the file.
     """
-
     if not filename.endswith('.san'):
         print(Fore.RED + "Error: File must have .san extension")
         return
