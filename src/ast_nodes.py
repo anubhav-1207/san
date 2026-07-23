@@ -62,6 +62,12 @@ class NullLiteral(AST):
     def __repr__(self):
         return f"(Null)"
 
+class ArrayLiteralNode(AST):
+    def __init__(self,elements):
+        self.elements = elements 
+    def __repr__(self):
+        return f"Array({self.elements})"
+
 #---Variable Assignment Node--------------------------------------------------------
 class VarAssignNode(AST):
     def __init__(self, var_name_token, value_node,is_const):

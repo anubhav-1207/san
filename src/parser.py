@@ -154,7 +154,22 @@ class Parser:
                 return FuncCallNode(variable.token_value, args)
             
             return VarAccessNode(variable)
-    
+        
+        
+        
+        elif self.match([TT_LBRACKET]):
+            self.expect([TT_LBRACKET])
+
+            elements = []
+            if self.current_token and self.current_token.type_ != TT_RBRACKET:
+                elements.append(self.parse_logical_or())
+                while self.current_token and self.current_token.type_ == TT_COMMA:
+                    self.expect([TT_COMMA])
+                    elements.append(self.parse_logical_or())
+            
+            self.expect([TT_RBRACKET])
+            return ArrayLiteralNode(elements)
+
     #---Exponents Parser--------------------------------------------------------
     def parse_power(self):
         """

@@ -1,6 +1,6 @@
 #interpreter.py
 #===================================================================
-#Walks through all the AST nodes and executes them one by one.
+#Walks all the AST nodes and executes them one by one.
 #===================================================================
 
 #---Error Classes-------------------------------------------------------------------------------
