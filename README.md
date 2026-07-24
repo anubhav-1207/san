@@ -27,6 +27,7 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Variables**: Declare mutable (`dec`) and immutable (`const`) variables
 - **Data Types**: Integers, floats, strings, booleans, null
 - **Operators**: Arithmetic (`+`, `-`, `*`, `/`, `**`), comparison (`>`, `<`, `==`, `!=`, `>=`, `<=`), logical (`&&`, `||`, `!`)
+- **Arrays**: Declare arrays and index them
 - **Control Flow**: `if/else` conditionals, `while` loops, `break` statements
 - **Functions**: First-class function definitions with parameters, closures, and `return` values
 - **I/O**: `stdout()` for printing, `scan(variable)` for user input
