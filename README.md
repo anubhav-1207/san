@@ -120,6 +120,7 @@ name = x[0] //assign array element to a variable using indexing
 stdout(name)
 stdout(y[0]) //direct printing of the element of array
 ```
+> Other array methods soon!
 
 ## Statement Termination 
 The lexer completely ignores ';' so you can skip it or use it, even use as many as you like. This is to ensure people from languages like JAVA, C, C++, Rust can use ';' and people from languages like Python can skip the ';'. Semi-colons have no meaning in San.
