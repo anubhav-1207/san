@@ -112,6 +112,16 @@ stdout("Hello, World") // Print to stdout
 multi line comment */
 ```
 
+## Arrays
+```c
+dec x = [1,2,3,4] //declare a mutable array
+const y = [2,4,6,8] //declare an immutable array 
+name = x[0] //assign array element to a variable using indexing 
+stdout(name)
+stdout(y[0]) //direct printing of the element of array
+```
+> Other array methods soon!
+
 ## Statement Termination 
 The lexer completely ignores ';' so you can skip it or use it, even use as many as you like. This is to ensure people from languages like JAVA, C, C++, Rust can use ';' and people from languages like Python can skip the ';'. Semi-colons have no meaning in San.
 ```c
