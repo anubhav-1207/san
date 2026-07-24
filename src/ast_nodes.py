@@ -66,7 +66,22 @@ class ArrayLiteralNode(AST):
     def __init__(self,elements):
         self.elements = elements 
     def __repr__(self):
-        return f"Array({self.elements})"
+        return f"(Array {self.elements})"
+
+class ArrayAssignNode(AST):
+    def __init__(self,name,elements):
+        self.name = name.token_value 
+        self.elements = elements 
+    def __repr__(self):
+        return f"(ArrayAssign {self.name}={self.elements}"
+
+class ArrayIndexingNode(AST):
+    def __init__(self,array,index):
+        self.index = index
+        self.array = array
+        dec_variables.append(array)
+    def __repr__(self):
+        return f"ArrayIndex {self.array}[{self.index}]"
 
 #---Variable Assignment Node--------------------------------------------------------
 class VarAssignNode(AST):

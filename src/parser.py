@@ -153,6 +153,12 @@ class Parser:
                 self.expect([TT_RPAREN]) 
                 return FuncCallNode(variable.token_value, args)
             
+            elif self.current_token and self.current_token.type_ == TT_LBRACKET:
+                self.advance()
+                index = self.parse_logical_or()
+                self.expect([TT_RBRACKET])
+                return ArrayIndexingNode(variable,index)
+            
             return VarAccessNode(variable)
         
         

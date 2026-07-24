@@ -62,14 +62,15 @@ TT_NEWLINE = "NEWLINE"
 
 #---Keywords-------------------------------------------------------------
 KEYWORDS = {
-    'dec', 'const','flux', 'func', 'return',
+    'dec', 'const','flux','arr'
+    'func', 'return',
     'if', 'else', 'elif',
     'loop', 'for', 'in', 'break', 'skip',
     'stdout', 'scan',
     'Null',
     'use', 'type', 'init', 'ext',
     'try', 'catch', 'drop',
-    'int','float','str','bool'
+    'int','float','str','bool',
 }
 
 NUMBERS = "1234567890"
