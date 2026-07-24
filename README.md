@@ -31,7 +31,8 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Functions**: First-class function definitions with parameters, closures, and `return` values
 - **I/O**: `stdout()` for printing, `scan(variable)` for user input
 - **Scoping**: Proper lexical scoping with environment chains
-[TRY OUT SAN](https://san-qftd.onrender.com)
+
+[Try out San in your browser](https://san-qftd.onrender.com)
 
 
 

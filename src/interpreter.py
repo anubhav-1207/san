@@ -4,19 +4,18 @@
 #===================================================================
 from .ast_nodes import *
 
-
 #---Error Classes-------------------------------------------------------------------------------
 class AccidentalReassError(Exception):
     def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental variable '{var}' already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001]")
+        super().__init__(f"class source.fatal:: environmental variable '{var.token_value}' already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001]")
 
 class UndefinedVariable(Exception):
     def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental variable '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002]")
+        super().__init__(f"class source.fatal:: environmental variable '{var.token_value}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002]")
 
 class ConstantMutation(Exception):
     def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental constant '{var}' is a constant,even explicit reassignment not allowed,\n\t\t---> interpreter exited with error[#INTRPTR003]")
+        super().__init__(f"class source.fatal:: environmental constant '{var.token_value}' is a constant,even explicit reassignment not allowed,\n\t\t---> interpreter exited with error[#INTRPTR003]")
 
 class ZeroDivisionError(Exception):
     def __init__(self,right,left):
@@ -24,11 +23,11 @@ class ZeroDivisionError(Exception):
 
 class UndefinedFunc(Exception):
     def __init__(self,var):
-        super().__init__(f"class source.recursive:: function '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR005]")
+        super().__init__(f"class source.recursive:: function '{var.token_value}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR005]")
 
 class InvalidTypeConv(Exception):
     def __init__(self,var,type_):
-        super().__init__(f"class source.fatal:: variable '{var}' is not of the required type '{type_}', cannot perform implicit type conversion - type mismatch,\n\t\t---> interpreter exited with error[#INTRPTR006]")
+        super().__init__(f"class source.fatal:: variable '{var.token_value}' is not of the required type '{type_}', cannot perform implicit type conversion - type mismatch,\n\t\t---> interpreter exited with error[#INTRPTR006]")
 
 class MalformedTypeOperation(Exception):
     def __init__(self):
@@ -62,12 +61,15 @@ class Environment:
             raise AccidentalReassError(name)
         else:
             self.vars[name] = (value, is_const)
+        
+        # print(self.vars)
     
     def lookup(self,name):
         """
         Searches for a variable in the global and parent scope. 
         """
         if name in self.vars:
+            # print("In vars")
             return self.vars[name][0]
         if self.parent:
             return self.parent.lookup(name)
@@ -144,11 +146,17 @@ class Evaluator:
         return None 
     
     def visit_ArrayLiteralNode(self,node):
-        # Evaluate each element in the array literal and return a Python list
         elements = []
         for el in node.elements:
             elements.append(self.evaluate(el))
         return elements
+    
+    def visit_ArrayIndexingNode(self,node):
+        
+        name = node.array.token_value
+        index = int(node.index.number)
+        array = self.current_env.lookup(name)
+        return array[index]
     
     def visit_UnaryOpNode(self,node):
         operand = self.evaluate(node.value)
