@@ -2,6 +2,8 @@
 #===================================================================
 #Walks all the AST nodes and executes them one by one.
 #===================================================================
+from .ast_nodes import *
+
 
 #---Error Classes-------------------------------------------------------------------------------
 class AccidentalReassError(Exception):
@@ -140,6 +142,13 @@ class Evaluator:
     
     def visit_NullLiteral(self,node):
         return None 
+    
+    def visit_ArrayLiteralNode(self,node):
+        # Evaluate each element in the array literal and return a Python list
+        elements = []
+        for el in node.elements:
+            elements.append(self.evaluate(el))
+        return elements
     
     def visit_UnaryOpNode(self,node):
         operand = self.evaluate(node.value)

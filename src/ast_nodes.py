@@ -66,7 +66,7 @@ class ArrayLiteralNode(AST):
     def __init__(self,elements):
         self.elements = elements 
     def __repr__(self):
-        return f"Array({self.elements})"
+        return f"(Array {self.elements})"
 
 #---Variable Assignment Node--------------------------------------------------------
 class VarAssignNode(AST):
