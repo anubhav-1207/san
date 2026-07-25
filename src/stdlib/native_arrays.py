@@ -1,3 +1,15 @@
+#stdlib/native_arrays.py 
+#-----------------------------------------------------------------------------------
+# This file contains all the built-ins methods for arrays
+# Currently, it has:
+# - len()
+# - append()
+# - pop()
+# - insert()
+# - del()
+#-----------------------------------------------------------------------------------
+
+#---Native Function Node/Class------------------------------------------------------
 class NativeFunction:
     """Wrapper for built-in Python functions to be called from Arc."""
     def __init__(self, name, expected_args, method, is_const=False):
@@ -7,20 +19,28 @@ class NativeFunction:
         self.is_native = True
         self.is_const = is_const
 
+#=====================================================================================
+#                           Built In Methods
+#=====================================================================================
+
+#---len()--------------------------
 def native_length(args):
     return len(args[0])
 
+#---append()------------------------
 def native_append(args):
     array = args[0]
     element = args[1]
     return array.append(element)
 
+#---pop()---------------------------
 def native_pop(args):
     array = args[0]
     index = args[1]
     print(array[index])
     return array.pop(index)
 
+#---insert()-------------------------
 def native_insert(args): #insert(array,index,element)
     array = args[0]
     index = args[1]
@@ -29,18 +49,24 @@ def native_insert(args): #insert(array,index,element)
     print(array,index,element)
     return array.insert(index,element)
 
+#---del()--------------------------------
 def native_del(args): # del(array,index)
     array = args[0]
     index = args[1]
 
     del array[index]
+#==========================================================================
 
-
-
+#-----------------------------------------------------------
 def inject_array_methods(function_table):
-    """Injects native array methods into the given function dictionary."""
+    """Injects native array methods into the given function dictionary(memory) in interpreter."""
     function_table["len"] = NativeFunction("len", 1, native_length)
     function_table["append"] = NativeFunction("append",2,native_append)
     function_table["pop"] = NativeFunction("pop",2,native_pop)
     function_table["insert"] = NativeFunction("insert",3,native_insert)
     function_table["del"] = NativeFunction("del",2,native_del)
+#-------------------------------------------------------------
+
+############################################################################
+#                           END OF FILE                                    #
+############################################################################
