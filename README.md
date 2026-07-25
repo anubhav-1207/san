@@ -115,7 +115,6 @@ multi line comment */
 ## Arrays
 ```c
 dec x = [1,2,3,4] //declare a mutable array
-const y = [2,4,6,8] //declare an immutable array 
 name = x[0] //assign array element to a variable using indexing 
 stdout(name)
 stdout(y[0]) //direct printing of the element of array
