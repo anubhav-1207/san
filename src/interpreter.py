@@ -3,6 +3,7 @@
 #Walks all the AST nodes and executes them one by one.
 #===================================================================
 from .ast_nodes import *
+from .stdlib.native_arrays import inject_array_methods
 
 #---Error Classes-------------------------------------------------------------------------------
 class AccidentalReassError(Exception):
@@ -11,7 +12,7 @@ class AccidentalReassError(Exception):
 
 class UndefinedVariable(Exception):
     def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental variable '{var.token_value}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002]")
+        super().__init__(f"class source.fatal:: environmental variable '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002]")
 
 class ConstantMutation(Exception):
     def __init__(self,var):
@@ -23,7 +24,7 @@ class ZeroDivisionError(Exception):
 
 class UndefinedFunc(Exception):
     def __init__(self,var):
-        super().__init__(f"class source.recursive:: function '{var.token_value}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR005]")
+        super().__init__(f"class source.recursive:: function '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR005]")
 
 class InvalidTypeConv(Exception):
     def __init__(self,var,type_):
@@ -43,8 +44,18 @@ class BreakException(Exception):
 class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
-#---Visitor Nodes-------------------------------------------------------------------------------
 
+
+#---STDLIB built-in Functions--------------------------------------------------------------------------
+class NativeFuncNode:
+    """Wrapper for built-ins of various functions"""
+    def __init__(self,name,expected_args,method):
+        self.name = name 
+        self.expected_args = expected_args
+        self.method = method 
+
+
+#---Visitor Nodes-------------------------------------------------------------------------------
 class Environment:
     """
     Creates a namespace to store variables.
@@ -61,8 +72,6 @@ class Environment:
             raise AccidentalReassError(name)
         else:
             self.vars[name] = (value, is_const)
-        
-        # print(self.vars)
     
     def lookup(self,name):
         """
@@ -101,6 +110,8 @@ class Evaluator:
         self.global_env = Environment()
         self.current_env = self.global_env
         self.functions = {}
+
+        inject_array_methods(self.functions)
     
     def evaluate(self,node):
         """
@@ -152,7 +163,6 @@ class Evaluator:
         return elements
     
     def visit_ArrayIndexingNode(self,node):
-        
         name = node.array.token_value
         index = int(node.index.number)
         array = self.current_env.lookup(name)
@@ -345,6 +355,16 @@ class Evaluator:
         func_def = self.functions[node.func_name]
         func_env = Environment(parent=self.current_env)
 
+        #---Built-in Function Handler------------------------------
+        if hasattr(func_def,'is_native'):
+            evaluated_args = [self.evaluate(arg) for arg in node.func_args]
+
+            if len(evaluated_args) != func_def.expected_args:
+                raise Exception("Not sufficient ARGS")
+        
+            return func_def.method(evaluated_args)
+
+        #---User Defined Functions----------------------------------
         for i, param in enumerate(func_def.func_params):
             arg_value = self.evaluate(node.func_args[i])
             func_env.define(param.token_value, arg_value)

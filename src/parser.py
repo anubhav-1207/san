@@ -239,6 +239,7 @@ class Parser:
 
             if self.current_token.token_value == 'const':
                 is_const = True
+                
             else:
                 is_const = False
 
