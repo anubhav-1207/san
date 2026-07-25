@@ -1,10 +1,11 @@
 class NativeFunction:
     """Wrapper for built-in Python functions to be called from Arc."""
-    def __init__(self, name, expected_args, method):
+    def __init__(self, name, expected_args, method, is_const=False):
         self.name = name
         self.expected_args = expected_args
         self.method = method
         self.is_native = True
+        self.is_const = is_const
 
 def native_length(args):
     return len(args[0])

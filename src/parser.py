@@ -19,6 +19,10 @@ class NullFuncBody(Exception):
     def __init__(self,line,col):
         super().__init__(f"class source.recursive:: environmental statements found null in function definiton, cannot handle null function,\n\t\t---> parser exited with error[#PAR003], line:col {line}:{col}")
 
+class ConstantArrayError(Exception):
+    def __init__(self,array,line,col):
+        super().__init__(f"class source.fatal:: environment array{array} found to be a constant, cannot handle constant arrays,\n\t\t---> parser exited with error[#PAR003], line:col {line}:{col}")
+
 #---Parser Class---------------------------------------------------------------------
 class Parser:
     def __init__(self,tokens):
@@ -235,19 +239,25 @@ class Parser:
         Parses statements.
         """
         if self.current_token and self.current_token.token_value in ('dec','const'):
-            # is_const = (self.current_token.token_value == 'const')
-
             if self.current_token.token_value == 'const':
                 is_const = True
+                self.expect([self.current_token.type_])
+                var_name_token = self.expect([TT_IDENT])
+                self.expect([TT_EQ])
+                if self.current_token.token_value != '[':
+                    var_value_node = self.parse_comp_expr()
+                    return VarAssignNode(var_name_token,var_value_node,is_const)
+                else:
+                    raise ConstantArrayError(var_name_token,self.current_token.line,self.current_token.col)
                 
             else:
                 is_const = False
+                self.expect([self.current_token.type_])
+                var_name_token = self.expect([TT_IDENT])
+                self.expect([TT_EQ])
+                var_value_node = self.parse_comp_expr()
+                return VarAssignNode(var_name_token,var_value_node,is_const)
 
-            self.expect([self.current_token.type_])
-            var_name_token = self.expect([TT_IDENT])
-            self.expect([TT_EQ])
-            var_value_node = self.parse_comp_expr()
-            return VarAssignNode(var_name_token,var_value_node,is_const)
         
         elif self.current_token and self.current_token.token_value == 'if':
             self.advance()

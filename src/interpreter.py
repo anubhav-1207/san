@@ -49,10 +49,11 @@ class ReturnException(Exception):
 #---STDLIB built-in Functions--------------------------------------------------------------------------
 class NativeFuncNode:
     """Wrapper for built-ins of various functions"""
-    def __init__(self,name,expected_args,method):
+    def __init__(self,name,expected_args,method,is_const):
         self.name = name 
         self.expected_args = expected_args
         self.method = method 
+        self.is_const = is_const
 
 
 #---Visitor Nodes-------------------------------------------------------------------------------
@@ -72,6 +73,8 @@ class Environment:
             raise AccidentalReassError(name)
         else:
             self.vars[name] = (value, is_const)
+        
+        print(self.vars)
     
     def lookup(self,name):
         """
