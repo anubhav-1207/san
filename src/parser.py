@@ -244,6 +244,8 @@ class Parser:
                 self.expect([self.current_token.type_])
                 var_name_token = self.expect([TT_IDENT])
                 self.expect([TT_EQ])
+                
+                #checking if an array is being declared with const then raising error
                 if self.current_token.token_value != '[':
                     var_value_node = self.parse_comp_expr()
                     return VarAssignNode(var_name_token,var_value_node,is_const)
