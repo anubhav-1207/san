@@ -27,11 +27,14 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Variables**: Declare mutable (`dec`) and immutable (`const`) variables
 - **Data Types**: Integers, floats, strings, booleans, null
 - **Operators**: Arithmetic (`+`, `-`, `*`, `/`, `**`), comparison (`>`, `<`, `==`, `!=`, `>=`, `<=`), logical (`&&`, `||`, `!`)
-- **Arrays**: Declare arrays and index them
+- **Arrays**: Declare arrays
+- **Indexing**: Access elements by index in a `string` or an `array`
+- **Slicing**: Slice both strings and arrays
 - **Control Flow**: `if/else` conditionals, `while` loops, `break` statements
 - **Functions**: First-class function definitions with parameters, closures, and `return` values
 - **I/O**: `stdout()` for printing, `scan(variable)` for user input
 - **Scoping**: Proper lexical scoping with environment chains
+- **Standard Library**: Consisting of various methods for `strings` and `arrays`
 
 [Try out San in your browser](https://san-qftd.onrender.com)
 
@@ -119,7 +122,6 @@ name = x[0] //assign array element to a variable using indexing
 stdout(name)
 stdout(y[0]) //direct printing of the element of array
 ```
-> Other array methods soon!
 
 ## Statement Termination 
 The lexer completely ignores ';' so you can skip it or use it, even use as many as you like. This is to ensure people from languages like JAVA, C, C++, Rust can use ';' and people from languages like Python can skip the ';'. Semi-colons have no meaning in San.
@@ -130,6 +132,19 @@ stdout("Hello World");
 stdout("Hello world")
 stdout("Hello world");;;;;;;;
 ```
+
+## Indexing
+```c
+dec string = "Hello World!"
+dec array = [1,2,3,4]
+
+//String Indexing
+string[0]
+string[::1]
+string[1:2:1]
+
+
+
 
 # Examples 
 You can check the /tests directory for more examples, files with the prefix "inv" are just to test the security features and will emit errors.

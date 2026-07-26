@@ -191,7 +191,6 @@ class Evaluator:
         end_index = self.evaluate(node.end_index)
         if end_index is None:
             end_index = int(len(name_value))
-            print(start_index,steps,end_index)
         else:
             end_index = int(self.evaluate(node.end_index))
             return array[start_index:end_index:steps]
