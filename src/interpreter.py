@@ -3,7 +3,9 @@
 #Walks all the AST nodes and executes them one by one.
 #===================================================================
 from .ast_nodes import *
-from .stdlib.native_arrays import inject_array_methods
+from src.stdlib import *
+from src.stdlib.native_arrays import inject_array_methods
+from src.stdlib.native_string import inject_string_methods
 
 #---Error Classes-------------------------------------------------------------------------------
 class AccidentalReassError(Exception):
@@ -74,7 +76,6 @@ class Environment:
         else:
             self.vars[name] = (value, is_const)
         
-        print(self.vars)
     
     def lookup(self,name):
         """
@@ -115,6 +116,7 @@ class Evaluator:
         self.functions = {}
 
         inject_array_methods(self.functions)
+        inject_string_methods(self.functions)
     
     def evaluate(self,node):
         """

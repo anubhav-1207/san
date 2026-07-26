@@ -10,7 +10,7 @@
 #-----------------------------------------------------------------------------------
 
 #---Native Function Node/Class------------------------------------------------------
-class NativeFunction:
+class NativeArrayFunction:
     """Wrapper for built-in Python functions to be called from Arc."""
     def __init__(self, name, expected_args, method, is_const=False):
         self.name = name
@@ -60,11 +60,11 @@ def native_del(args): # del(array,index)
 #-----------------------------------------------------------
 def inject_array_methods(function_table):
     """Injects native array methods into the given function dictionary(memory) in interpreter."""
-    function_table["len"] = NativeFunction("len", 1, native_length)
-    function_table["append"] = NativeFunction("append",2,native_append)
-    function_table["pop"] = NativeFunction("pop",2,native_pop)
-    function_table["insert"] = NativeFunction("insert",3,native_insert)
-    function_table["del"] = NativeFunction("del",2,native_del)
+    function_table["len"] = NativeArrayFunction("len", 1, native_length)
+    function_table["append"] = NativeArrayFunction("append",2,native_append)
+    function_table["pop"] = NativeArrayFunction("pop",2,native_pop)
+    function_table["insert"] = NativeArrayFunction("insert",3,native_insert)
+    function_table["del"] = NativeArrayFunction("del",2,native_del)
 #-------------------------------------------------------------
 
 ############################################################################
