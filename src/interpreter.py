@@ -3,7 +3,9 @@
 #Walks all the AST nodes and executes them one by one.
 #===================================================================
 from .ast_nodes import *
-from .stdlib.native_arrays import inject_array_methods
+from src.stdlib import *
+from src.stdlib.native_arrays import inject_array_methods
+from src.stdlib.native_string import inject_string_methods
 
 #---Error Classes-------------------------------------------------------------------------------
 class AccidentalReassError(Exception):
@@ -74,7 +76,6 @@ class Environment:
         else:
             self.vars[name] = (value, is_const)
         
-        print(self.vars)
     
     def lookup(self,name):
         """
@@ -115,6 +116,7 @@ class Evaluator:
         self.functions = {}
 
         inject_array_methods(self.functions)
+        inject_string_methods(self.functions)
     
     def evaluate(self,node):
         """
@@ -159,17 +161,42 @@ class Evaluator:
     def visit_NullLiteral(self,node):
         return None 
     
+    def visit_NoneType(self,node):
+        return None
+    
     def visit_ArrayLiteralNode(self,node):
         elements = []
         for el in node.elements:
             elements.append(self.evaluate(el))
         return elements
     
-    def visit_ArrayIndexingNode(self,node):
+    def visit_IndexingNode(self,node):
         name = node.array.token_value
-        index = int(node.index.number)
+        name_value = self.current_env.lookup(name)
+        
+        start_index = self.evaluate(node.start_index)
+        if start_index is None:
+            start_index = 0
+        else:
+            start_index = int(self.evaluate(node.start_index))
+
+        steps = self.evaluate(node.steps)
+        if steps is None:
+            steps = 1
+        else:
+            step = int(self.evaluate(node.steps))
+        
         array = self.current_env.lookup(name)
-        return array[index]
+        
+        end_index = self.evaluate(node.end_index)
+        if end_index is None:
+            end_index = int(len(name_value))
+        else:
+            end_index = int(self.evaluate(node.end_index))
+            return array[start_index:end_index:steps]
+        
+
+
     
     def visit_UnaryOpNode(self,node):
         operand = self.evaluate(node.value)
