@@ -161,6 +161,9 @@ class Evaluator:
     def visit_NullLiteral(self,node):
         return None 
     
+    def visit_NoneType(self,node):
+        return None
+    
     def visit_ArrayLiteralNode(self,node):
         elements = []
         for el in node.elements:
@@ -170,23 +173,30 @@ class Evaluator:
     def visit_IndexingNode(self,node):
         name = node.array.token_value
         name_value = self.current_env.lookup(name)
-        start_index = int(self.evaluate(node.start_index))
         
+        start_index = self.evaluate(node.start_index)
+        if start_index is None:
+            start_index = 0
+        else:
+            start_index = int(self.evaluate(node.start_index))
 
-        steps = int(self.evaluate(node.steps))
-        end_index = node.end_index
+        steps = self.evaluate(node.steps)
+        if steps is None:
+            steps = 1
+        else:
+            step = int(self.evaluate(node.steps))
         
         array = self.current_env.lookup(name)
-
+        
+        end_index = self.evaluate(node.end_index)
         if end_index is None:
             end_index = int(len(name_value))
-            return array[start_index:end_index:steps]
+            print(start_index,steps,end_index)
         else:
             end_index = int(self.evaluate(node.end_index))
             return array[start_index:end_index:steps]
         
-        print(steps,end_index,start_index)
-        print(type(end_index))
+
 
     
     def visit_UnaryOpNode(self,node):

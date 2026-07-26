@@ -164,16 +164,11 @@ class Parser:
                 if self.current_token.type_ == TT_COLON:
                     self.advance()
                     end_index = self.parse_logical_or()
-                    if end_index is None:
-                            # end_index = 0
-                            pass
+            
 
                     if self.current_token.type_ == TT_COLON:
                         self.advance()
                         steps = self.parse_logical_or()
-                        if steps is None:
-                            # steps = 0
-                            pass
                     
                     
 
