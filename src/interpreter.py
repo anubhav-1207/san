@@ -167,11 +167,27 @@ class Evaluator:
             elements.append(self.evaluate(el))
         return elements
     
-    def visit_ArrayIndexingNode(self,node):
+    def visit_IndexingNode(self,node):
         name = node.array.token_value
-        index = int(node.index.number)
+        name_value = self.current_env.lookup(name)
+        start_index = int(self.evaluate(node.start_index))
+        
+
+        steps = int(self.evaluate(node.steps))
+        end_index = node.end_index
+        
         array = self.current_env.lookup(name)
-        return array[index]
+
+        if end_index is None:
+            end_index = int(len(name_value))
+            return array[start_index:end_index:steps]
+        else:
+            end_index = int(self.evaluate(node.end_index))
+            return array[start_index:end_index:steps]
+        
+        print(steps,end_index,start_index)
+        print(type(end_index))
+
     
     def visit_UnaryOpNode(self,node):
         operand = self.evaluate(node.value)

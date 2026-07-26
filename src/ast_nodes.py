@@ -75,13 +75,15 @@ class ArrayAssignNode(AST):
     def __repr__(self):
         return f"(ArrayAssign {self.name}={self.elements}"
 
-class ArrayIndexingNode(AST):
-    def __init__(self,array,index):
-        self.index = index
+class IndexingNode(AST):
+    def __init__(self,array,start_index,end_index,steps):
         self.array = array
-        dec_variables.append(array)
+        self.start_index = start_index
+        self.end_index = end_index
+        self.steps = steps
+
     def __repr__(self):
-        return f"ArrayIndex {self.array}[{self.index}]"
+        return f"ArrayIndex {self.array}[{self.start_index}:{self.end_Index}:{self.steps}]"
 
 #---Variable Assignment Node--------------------------------------------------------
 class VarAssignNode(AST):
