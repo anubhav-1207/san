@@ -29,7 +29,6 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Operators**: Arithmetic (`+`, `-`, `*`, `/`, `**`), comparison (`>`, `<`, `==`, `!=`, `>=`, `<=`), logical (`&&`, `||`, `!`)
 - **Arrays**: Declare arrays
 - **Indexing**: Access elements by index in a `string` or an `array`
-- **Slicing**: Slice both strings and arrays
 - **Control Flow**: `if/else` conditionals, `while` loops, `break` statements
 - **Functions**: First-class function definitions with parameters, closures, and `return` values
 - **I/O**: `stdout()` for printing, `scan(variable)` for user input
@@ -142,7 +141,7 @@ dec array = [1,2,3,4]
 string[0]
 string[::1]
 string[1:2:1]
-
+```
 
 
 
