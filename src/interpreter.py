@@ -171,7 +171,7 @@ class Evaluator:
         return elements
     
     def visit_IndexingNode(self,node):
-        name = node.array.token_value
+        name = node.array.token_value #get
         name_value = self.current_env.lookup(name)
         
         start_index = self.evaluate(node.start_index)
@@ -189,11 +189,13 @@ class Evaluator:
         array = self.current_env.lookup(name)
         
         end_index = self.evaluate(node.end_index)
+        
         if end_index is None:
             end_index = int(len(name_value))
         else:
             end_index = int(self.evaluate(node.end_index))
-            return array[start_index:end_index:steps]
+
+        return array[start_index:end_index:steps]
         
 
 
