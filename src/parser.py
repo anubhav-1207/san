@@ -160,21 +160,8 @@ class Parser:
             elif self.current_token and self.current_token.type_ == TT_LBRACKET:
                 self.advance()
                 start_index = self.parse_logical_or()
-                
-                try:
-                    self.expect([TT_COLON])
-                    end_index = self.parse_logical_or()
-                except Exception as e:
-                    end_index = None
-
-                try:
-                    self.expect([TT_COLON])
-                    steps = self.parse_logical_or()
-                except Exception as e:
-                    steps = None
-                    
                 self.expect([TT_RBRACKET])
-                return IndexingNode(variable,start_index,end_index,steps)
+                return IndexingNode(variable,start_index)
             
             return VarAccessNode(variable)
         
