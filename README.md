@@ -146,7 +146,7 @@ string[1:2:1]
 
 
 # Examples 
-You can check the /tests directory for more examples, files with the prefix "inv" are just to test the security features and will emit errors.
+You can check the `/tests` directory for more examples, files with the prefix "inv" are just to test the security features and will emit errors.
 
 # Architecture 
 San consists of the following core components: 
