@@ -184,8 +184,6 @@ class Evaluator:
         steps = self.evaluate(node.steps)
         return array_value[start_index:end_index:steps]
 
-
-    
     def visit_UnaryOpNode(self,node):
         operand = self.evaluate(node.value)
 
@@ -347,7 +345,6 @@ class Evaluator:
                 for stmt in node.else_body:
                     result = self.evaluate(stmt)
                 return result
-        
         return None
     
     def visit_WhileNode(self,node):
@@ -408,3 +405,8 @@ class Evaluator:
     def visit_ReturnNode(self,node):
         value = self.evaluate(node.value) if node.value else None
         raise ReturnException(value)
+
+
+########################################################################
+#                         END OF FILE                                  #
+########################################################################
