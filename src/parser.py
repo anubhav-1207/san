@@ -200,9 +200,7 @@ class Parser:
 
     #---Exponents Parser--------------------------------------------------------
     def parse_power(self):
-        """
-        Parser exponents.
-        """
+        """Parser exponents."""
         left = self.parse_factor()
         if self.current_token and self.match([TT_STARSTAR]):
             op = self.current_token.token_value
@@ -213,9 +211,7 @@ class Parser:
     
     #---Term Parser------------------------------------------------------------
     def parse_term(self):
-        """
-        Parses terminals values.
-        """
+        """Parses terminals values."""
         left = self.parse_power()
         while self.current_token and self.match([TT_STAR,TT_SLASH]):
             op = self.current_token.token_value 
@@ -227,9 +223,7 @@ class Parser:
 
     #---Expression Parser-------------------------------------------------------
     def parse_expr(self):
-        """
-        Parses expressions.
-        """
+        """Parses expressions."""
         left = self.parse_term()
         while self.current_token and self.match([TT_PLUS,TT_MINUS]):
             op = self.current_token.token_value
@@ -240,9 +234,7 @@ class Parser:
 
     #---Comparison Parser--------------------------------------------------
     def parse_comp_expr(self):
-        """
-        Parses comparison expressions.
-        """
+        """Parses comparison expressions."""
         left = self.parse_expr()
         while self.current_token and self.match([TT_GT,TT_GTE,TT_LT,TT_LTE,TT_EQEQ,TT_BANGEQ]):
             op = self.current_token.token_value
@@ -253,9 +245,9 @@ class Parser:
     
     #---Parse Statements--------------------------------------------------------
     def parse_statements(self):
-        """
-        Parses statements.
-        """
+        """Parses statements."""
+        
+        
         if self.current_token and self.current_token.token_value in ('dec','const'):
             if self.current_token.token_value == 'const':
                 is_const = True
@@ -263,7 +255,7 @@ class Parser:
                 var_name_token = self.expect([TT_IDENT])
                 self.expect([TT_EQ])
                 
-                #checking if an array is being declared with const then raising error
+                #checking if an array is being declared with const, then raising error if it is 
                 if self.current_token.token_value != '[':
                     var_value_node = self.parse_comp_expr()
                     return VarAssignNode(var_name_token,var_value_node,is_const)
@@ -284,11 +276,9 @@ class Parser:
             self.expect([TT_LPAREN])
             condition = self.parse_logical_or()
             self.expect([TT_RPAREN])
-            # self.expect([TT_LBRACE])
             if_body = self.parse_blocks()
             if not if_body:
                 raise ControlFLowError("if",self.current_token.line,self.current_token.col)
-            # self.expect([TT_RBRACE])
 
             else_body = None 
             if self.current_token and self.current_token.token_value == 'else':
