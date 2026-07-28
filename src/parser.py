@@ -32,9 +32,7 @@ class Parser:
 
     #---Advance----------------------------------------------------
     def advance(self):
-        """
-        Consumes and returns the current token and advances past it.
-        """
+        """Consumes and returns the current token and advances past it."""
         self.pos += 1
         if self.pos < len(self.tokens):
             self.current_token = self.tokens[self.pos]
@@ -43,9 +41,7 @@ class Parser:
     
     #---Peek-------------------------------------------------------
     def peek(self):
-        """
-        Returns the next token without consuming it.
-        """
+        """Returns the next token without consuming it."""
         if (self.pos + 1) < (len(self.tokens)):
             return self.tokens[self.pos+1]
         else:
@@ -53,16 +49,12 @@ class Parser:
     
     #---Match----------------------------------------------------
     def match(self,token_types):
-        """
-        Tells if the current token_type matches the given token types(s).
-        """
+        """Tells if the current token_type matches the given token types(s)."""
         return self.current_token.type_ in token_types
     
     #---Expect---------------------------------------------------
     def expect(self,token_types):
-        """
-        Matches the current token, if true, then consumes it, else returns error.
-        """
+        """Matches the current token, if true, then consumes it, else returns error."""
         if self.match(token_types):
             tok = self.current_token
             self.advance()
