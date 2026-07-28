@@ -19,22 +19,25 @@ class NativeArrayFunction:
         self.is_native = True
         self.is_const = is_const
 
-#=====================================================================================
-#                           Built In Methods
-#=====================================================================================
+#==========================================================================
+#                          Built In Methods
+#==========================================================================
 
 #---len()--------------------------
-def native_length(args):
+def native_length(args): #works for both strings and arrays 
+    """Returns the length of the arguement."""
     return len(args[0])
 
 #---append()------------------------
 def native_append(args):
+    """Appends a value to an array."""
     array = args[0]
     element = args[1]
     return array.append(element)
 
 #---pop()---------------------------
 def native_pop(args):
+    """Pops a value from the array."""
     array = args[0]
     index = args[1]
     print(array[index])
@@ -42,6 +45,7 @@ def native_pop(args):
 
 #---insert()-------------------------
 def native_insert(args): #insert(array,index,element)
+    """Inserts an element into the specified index."""
     array = args[0]
     index = args[1]
     element = args[2]
@@ -51,6 +55,7 @@ def native_insert(args): #insert(array,index,element)
 
 #---del()--------------------------------
 def native_del(args): # del(array,index)
+    """Deletes an element at the given index."""
     array = args[0]
     index = args[1]
 
