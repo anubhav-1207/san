@@ -75,8 +75,7 @@ class Parser:
 
     #---AND parser------------------------------------------
     def parse_logical_and(self):
-        """Parses the '&&' operator.
-        """
+        """Parses the '&&' operator."""
         left = self.parse_comp_expr()
         while self.current_token and self.match([TT_AND]):
             op = self.current_token.token_value
@@ -87,9 +86,7 @@ class Parser:
 
     #---Factor Parser------------------------------------------
     def parse_factor(self):
-        """
-        Parses factors.
-        """
+        """Parses factors."""
         if self.match([TT_PLUS,TT_MINUS,TT_BANG]):
             op = self.current_token.token_value
             self.advance()
