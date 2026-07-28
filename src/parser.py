@@ -87,62 +87,70 @@ class Parser:
     #---Factor Parser------------------------------------------
     def parse_factor(self):
         """Parses factors."""
+        
+        #---PLUS, MINUS, BANG-----------------
         if self.match([TT_PLUS,TT_MINUS,TT_BANG]):
             op = self.current_token.token_value
             self.advance()
             node = self.parse_factor()
             return UnaryOpNode(op,node)
         
+        #---INT, FLOAT-------------------------
         elif self.match([TT_INT,TT_FLOAT]):
             tok = self.expect([TT_INT,TT_FLOAT])
             return NumberNode(tok)
         
+        #---BOOL-----------------------------   
         elif self.match([TT_BOOL]):
             value = self.current_token.token_value
             self.advance()
             return BooleanLiteral(value)
         
+        #---STRING---------------------------
         elif self.match([TT_STR]):
             value = self.current_token.token_value
             self.advance()
             return StringLiteral(value)
         
+        #---LPAREN------------------------------
         elif self.match([TT_LPAREN]):
             self.expect([TT_LPAREN])
             expression_node = self.parse_logical_or()
             self.expect([TT_RPAREN])
             return expression_node
         
+        #---NULL---------------------------------
         elif self.current_token and self.current_token.token_value == 'Null':
             self.advance()
             return NullLiteral()
 
+        #---FLUX------------------------------------
         elif self.current_token and self.current_token.token_value == 'flux':
             self.advance()
             var_token = self.expect([TT_IDENT])
             self.expect([TT_EQ])
             value = self.parse_logical_or()
             return VarReassignNode(var_token, value)
-            
+        
+        #---IDENTIFIERS-----------------------------------------------------
         elif self.match([TT_IDENT]):
             variable = self.expect([TT_IDENT])
             
+            #---Function Call Checks----------------------------------------
             if self.current_token and self.current_token.type_ == TT_LPAREN:
-
-                self.expect([TT_LPAREN]) 
+                self.advance()
                 
                 args = []
                 if self.current_token and self.current_token.type_ != TT_RPAREN:
-
                     args.append(self.parse_logical_or())
-
                     while self.current_token and self.current_token.type_ == TT_COMMA:
                         self.expect([TT_COMMA])
                         args.append(self.parse_logical_or())
                 
                 self.expect([TT_RPAREN]) 
                 return FuncCallNode(variable.token_value, args)
-            
+
+            #---Indexing & Slicing Checks-----------------------------------------
             elif self.current_token and self.current_token.type_ == TT_LBRACKET:
                 self.advance()
                 try:
@@ -150,31 +158,33 @@ class Parser:
                 except:
                     start_index = None 
 
-
+                #Check if it is a slicing instead of indexing
+                #---End Index-------------------------
                 if self.current_token.type_ == TT_COLON:
                     self.advance()
                     try:
                         end_index = self.parse_logical_or()
                     except:
                         end_index = None 
-                    
+                #-----------------------------------------
                     self.expect([TT_COLON])
-
+                #---Steps---------------------------------
                     try:
                         steps = self.parse_logical_or()
                     except:
                         steps = None 
-
+                #------------------------------------------
                     self.expect([TT_RBRACKET])
                     return SlicingNode(variable,start_index,end_index,steps)
                 
+                #if not slicing, return indexing node
                 self.expect([TT_RBRACKET])
                 return IndexingNode(variable,start_index)
             
+            #if neither func call, slicing, or indexing, then it is just accessing the variable
             return VarAccessNode(variable)
         
-        
-        
+        #---ARRAYS---------------------------------------
         elif self.match([TT_LBRACKET]):
             self.expect([TT_LBRACKET])
 
