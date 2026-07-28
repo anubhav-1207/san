@@ -47,7 +47,6 @@ class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
 
-
 #---STDLIB built-in Functions--------------------------------------------------------------------------
 class NativeFuncNode:
     """Wrapper for built-ins of various functions"""
@@ -56,7 +55,6 @@ class NativeFuncNode:
         self.expected_args = expected_args
         self.method = method 
         self.is_const = is_const
-
 
 #---Visitor Nodes-------------------------------------------------------------------------------
 class Environment:
@@ -76,7 +74,6 @@ class Environment:
         else:
             self.vars[name] = (value, is_const)
         
-    
     def lookup(self,name):
         """
         Searches for a variable in the global and parent scope. 
@@ -406,3 +403,7 @@ class Evaluator:
     def visit_ReturnNode(self,node):
         value = self.evaluate(node.value) if node.value else None
         raise ReturnException(value)
+
+##########################################################################
+#                            END OF FILE                                 #
+##########################################################################
