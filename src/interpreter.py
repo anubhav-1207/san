@@ -47,7 +47,6 @@ class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
 
-
 #---STDLIB built-in Functions--------------------------------------------------------------------------
 class NativeFuncNode:
     """Wrapper for built-ins of various functions"""
@@ -59,30 +58,34 @@ class NativeFuncNode:
 
 #---Visitor Nodes-------------------------------------------------------------------------------
 class Environment:
-    """Creates a namespace to store variables."""
+    """
+    Creates a namespace to store variables.
+    """
     def __init__(self,parent=None):
         self.parent = parent
         self.vars = {}
 
-    #---Enters a value in the namespace-----------------
     def define(self,name,value,is_const=False):
-        """Adds the variable and its value to namespace."""
+        """
+        Adds the variable and its value to namespace.
+        """
         if name in self.vars:
             raise AccidentalReassError(name)
         else:
             self.vars[name] = (value, is_const)
-    
-    #---Finds the value of the variable in the given environment/scope-------------------
+        
     def lookup(self,name):
-        """Searches for a variable in the global and parent scope. """
+        """
+        Searches for a variable in the global and parent scope. 
+        """
         if name in self.vars:
+            # print("In vars")
             return self.vars[name][0]
         if self.parent:
             return self.parent.lookup(name)
         else:
             raise UndefinedVariable(name)
     
-    #---Edits the value of a var in the namespace-----------------------------------------
     def reassign_var(self,name,value):
         """
         Reassigns the variable if not a consant.
@@ -113,7 +116,9 @@ class Evaluator:
         inject_string_methods(self.functions)
     
     def evaluate(self,node):
-        """Gets the node name and visits the node."""
+        """
+        Gets the node name and visits the node.
+        """
         method_name = f"visit_{node.__class__.__name__}"
         visitor = getattr(self,method_name,None)
         if visitor is None:
@@ -166,16 +171,16 @@ class Evaluator:
         name = node.array.token_value  # get variable name
         array = self.current_env.lookup(name)
         start_index = self.evaluate(node.start_index)
-        return array[start_index]
-    
-    def visit_SlicingNode(self,node):
-        name = node.array.token_value
-        array_value = self.current_env.lookup(name)
-        start_index = self.evaluate(node.start_index)
-        end_index = self.evaluate(node.end_index)
-        steps = self.evaluate(node.steps)
-        return array_value[start_index:end_index:steps]
+        # steps = self.evaluate(node.steps)
+        # array = self.current_env.lookup(name)
+        # end_index = self.evaluate(node.end_index)
+        
 
+        return array[start_index]
+        
+
+
+    
     def visit_UnaryOpNode(self,node):
         operand = self.evaluate(node.value)
 
@@ -337,6 +342,7 @@ class Evaluator:
                 for stmt in node.else_body:
                     result = self.evaluate(stmt)
                 return result
+        
         return None
     
     def visit_WhileNode(self,node):
@@ -398,7 +404,6 @@ class Evaluator:
         value = self.evaluate(node.value) if node.value else None
         raise ReturnException(value)
 
-
-########################################################################
-#                         END OF FILE                                  #
-########################################################################
+##########################################################################
+#                            END OF FILE                                 #
+##########################################################################
