@@ -64,9 +64,7 @@ class Parser:
     
     #---OR Parser------------------------------------------------
     def parse_logical_or(self):
-        """
-        Parses '||' operator.
-        """
+        """Parses '||' operator."""
         left = self.parse_logical_and()
         while self.current_token and self.match([TT_OR]):
             op = self.current_token.token_value
@@ -77,8 +75,7 @@ class Parser:
 
     #---AND parser------------------------------------------
     def parse_logical_and(self):
-        """
-        Parses the '&&' operator.
+        """Parses the '&&' operator.
         """
         left = self.parse_comp_expr()
         while self.current_token and self.match([TT_AND]):
