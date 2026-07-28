@@ -174,13 +174,15 @@ class Evaluator:
         name = node.array.token_value  # get variable name
         array = self.current_env.lookup(name)
         start_index = self.evaluate(node.start_index)
-        # steps = self.evaluate(node.steps)
-        # array = self.current_env.lookup(name)
-        # end_index = self.evaluate(node.end_index)
-        
-
         return array[start_index]
-        
+    
+    def visit_SlicingNode(self,node):
+        name = node.array.token_value
+        array_value = self.current_env.lookup(name)
+        start_index = self.evaluate(node.start_index)
+        end_index = self.evaluate(node.end_index)
+        steps = self.evaluate(node.steps)
+        return array_value[start_index:end_index:steps]
 
 
     

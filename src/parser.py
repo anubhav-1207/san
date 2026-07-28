@@ -159,7 +159,29 @@ class Parser:
             
             elif self.current_token and self.current_token.type_ == TT_LBRACKET:
                 self.advance()
-                start_index = self.parse_logical_or()
+                try:
+                    start_index = self.parse_logical_or()
+                except:
+                    start_index = None 
+
+
+                if self.current_token.type_ == TT_COLON:
+                    self.advance()
+                    try:
+                        end_index = self.parse_logical_or()
+                    except:
+                        end_index = None 
+                    
+                    self.expect([TT_COLON])
+
+                    try:
+                        steps = self.parse_logical_or()
+                    except:
+                        steps = None 
+
+                    self.expect([TT_RBRACKET])
+                    return SlicingNode(variable,start_index,end_index,steps)
+                
                 self.expect([TT_RBRACKET])
                 return IndexingNode(variable,start_index)
             
