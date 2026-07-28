@@ -247,7 +247,7 @@ class Parser:
     def parse_statements(self):
         """Parses statements."""
         
-        
+        #---Declaration using const and dec--------------------------------
         if self.current_token and self.current_token.token_value in ('dec','const'):
             if self.current_token.token_value == 'const':
                 is_const = True
@@ -270,7 +270,7 @@ class Parser:
                 var_value_node = self.parse_comp_expr()
                 return VarAssignNode(var_name_token,var_value_node,is_const)
 
-        
+        #---IF and ELSE--------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'if':
             self.advance()
             self.expect([TT_LPAREN])
@@ -283,12 +283,10 @@ class Parser:
             else_body = None 
             if self.current_token and self.current_token.token_value == 'else':
                 self.advance()
-                # self.expect([TT_LBRACE])
                 else_body = self.parse_blocks()
-                # self.expect([TT_RBRACE])
-            
             return IfNode(condition,if_body,else_body)
 
+        #---WHILE Iterator-----------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'while':
             self.expect([self.current_token.type_])
             self.expect([TT_LPAREN])
@@ -299,6 +297,7 @@ class Parser:
                 raise ControlFLowError("while",self.current_token.line,self.current_token.col)
             return WhileNode(condition,while_body)
         
+        #---Functions-------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'func':
             self.expect([self.current_token.type_])
             func_name = self.current_token.token_value
@@ -316,6 +315,7 @@ class Parser:
                 raise NullFuncBody(self.current_token.line,self.current_token.col)
             return FuncDefNode(func_name,params,func_body)
         
+        #---Return------------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'return':
             self.expect([self.current_token.type_])
             value = None
@@ -323,10 +323,12 @@ class Parser:
                 value = self.parse_logical_or()
             return ReturnNode(value)
 
+        #---Break-------------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'break':
             self.advance()
             return BreakNode()
         
+        #---Standard output function--------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'stdout':
             self.expect([self.current_token.type_])
             self.expect([TT_LPAREN])
@@ -334,6 +336,7 @@ class Parser:
             self.expect([TT_RPAREN])
             return StdOutNode(value)
         
+        #---Scan---------------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'scan':
             self.expect([self.current_token.type_])
             self.expect(TT_LPAREN)
@@ -344,16 +347,13 @@ class Parser:
             self.advance()
             self.expect([TT_RPAREN])
             return ScanNode(variable,type_)
-        
         else:
             expr = self.parse_logical_or()
             return expr
     
     #---Statement List Parser------------------------------------------------------
     def parse_statements_list(self):
-        """
-        Parses statements inside a block until '}' is reached.
-        """
+        """Parses statements inside a block until '}' is reached."""
         statements = []
         while self.current_token and self.current_token.type_ != TT_RBRACE:
             stmt = self.parse_statements()
@@ -365,9 +365,7 @@ class Parser:
 
 
     def parse_blocks(self):
-        """
-        Parses blocks '{}'.
-        """
+        """Parses blocks '{}'."""
         if self.current_token and self.current_token.type_ == TT_LBRACE:
             self.expect([TT_LBRACE])
             statements = self.parse_statements_list()
@@ -375,9 +373,7 @@ class Parser:
             return statements
 
     def parse(self):
-        """
-        The main parser method from where the parsing begins.
-        """
+        """The main parser method from where the parsing begins."""
         statements = []
         while self.current_token and self.current_token.type_ != TT_EOF:
             stmt = self.parse_statements()
