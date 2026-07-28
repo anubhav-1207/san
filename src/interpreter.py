@@ -57,38 +57,32 @@ class NativeFuncNode:
         self.method = method 
         self.is_const = is_const
 
-
 #---Visitor Nodes-------------------------------------------------------------------------------
 class Environment:
-    """
-    Creates a namespace to store variables.
-    """
+    """Creates a namespace to store variables."""
     def __init__(self,parent=None):
         self.parent = parent
         self.vars = {}
 
+    #---Enters a value in the namespace-----------------
     def define(self,name,value,is_const=False):
-        """
-        Adds the variable and its value to namespace.
-        """
+        """Adds the variable and its value to namespace."""
         if name in self.vars:
             raise AccidentalReassError(name)
         else:
             self.vars[name] = (value, is_const)
-        
     
+    #---Finds the value of the variable in the given environment/scope-------------------
     def lookup(self,name):
-        """
-        Searches for a variable in the global and parent scope. 
-        """
+        """Searches for a variable in the global and parent scope. """
         if name in self.vars:
-            # print("In vars")
             return self.vars[name][0]
         if self.parent:
             return self.parent.lookup(name)
         else:
             raise UndefinedVariable(name)
     
+    #---Edits the value of a var in the namespace-----------------------------------------
     def reassign_var(self,name,value):
         """
         Reassigns the variable if not a consant.
@@ -119,9 +113,7 @@ class Evaluator:
         inject_string_methods(self.functions)
     
     def evaluate(self,node):
-        """
-        Gets the node name and visits the node.
-        """
+        """Gets the node name and visits the node."""
         method_name = f"visit_{node.__class__.__name__}"
         visitor = getattr(self,method_name,None)
         if visitor is None:
