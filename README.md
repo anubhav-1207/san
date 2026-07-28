@@ -10,7 +10,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-![Lines of Code](https://img.shields.io/badge/Lines%20of%20Code-~1,497-brightgreen)
+![Lines of Code](https://img.shields.io/badge/Lines%20of%20Code-~1,921-brightgreen)
 
 ![Status](https://img.shields.io/badge/Status-Complete-success)
 
@@ -29,14 +29,14 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Operators**: Arithmetic (`+`, `-`, `*`, `/`, `**`), comparison (`>`, `<`, `==`, `!=`, `>=`, `<=`), logical (`&&`, `||`, `!`)
 - **Arrays**: Declare arrays
 - **Indexing**: Access elements by index in a `string` or an `array`
-- **Slicing**: Slice both strings and arrays
+- **Slicing**: Access elements within an origin and destination indices
 - **Control Flow**: `if/else` conditionals, `while` loops, `break` statements
 - **Functions**: First-class function definitions with parameters, closures, and `return` values
 - **I/O**: `stdout()` for printing, `scan(variable)` for user input
 - **Scoping**: Proper lexical scoping with environment chains
 - **Standard Library**: Consisting of various methods for `strings` and `arrays`
 
-[Try out San in your browser](https://san-qftd.onrender.com)
+### [Try out San in your browser](https://san-qftd.onrender.com)
 
 
 
@@ -133,21 +133,27 @@ stdout("Hello world")
 stdout("Hello world");;;;;;;;
 ```
 
-## Indexing
+## Indexing and Slicing
 ```c
 dec string = "Hello World!"
 dec array = [1,2,3,4]
 
 //String Indexing
 string[0]
+//String Slicing
 string[::1]
 string[1:2:1]
 
+//Array Indexing
+array[3]
+//Array Slicing
+array[::-1]
+```
 
 
 
 # Examples 
-You can check the /tests directory for more examples, files with the prefix "inv" are just to test the security features and will emit errors.
+You can check the `/tests` directory for more examples, files with the prefix "inv" are just to test the security features and will emit errors.
 
 # Architecture 
 San consists of the following core components: 

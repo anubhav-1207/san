@@ -85,6 +85,16 @@ class IndexingNode(AST):
     def __repr__(self):
         return f"ArrayIndex {self.array}[{self.start_index}]"
 
+class SlicingNode(AST):
+    def __init__(self,array,start_index,end_index,steps):
+        self.array = array 
+        self.start_index = start_index 
+        self.end_index = end_index 
+        self.steps = steps 
+    
+    def __repr__(self):
+        return f"(SLICING {self.array}[{self.start_index}:{self.end_index}:{self.steps}]"
+
 #---Variable Assignment Node--------------------------------------------------------
 class VarAssignNode(AST):
     def __init__(self, var_name_token, value_node,is_const):

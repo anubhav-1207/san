@@ -32,9 +32,7 @@ class Parser:
 
     #---Advance----------------------------------------------------
     def advance(self):
-        """
-        Consumes and returns the current token and advances past it.
-        """
+        """Consumes and returns the current token and advances past it."""
         self.pos += 1
         if self.pos < len(self.tokens):
             self.current_token = self.tokens[self.pos]
@@ -43,9 +41,7 @@ class Parser:
     
     #---Peek-------------------------------------------------------
     def peek(self):
-        """
-        Returns the next token without consuming it.
-        """
+        """Returns the next token without consuming it."""
         if (self.pos + 1) < (len(self.tokens)):
             return self.tokens[self.pos+1]
         else:
@@ -53,16 +49,12 @@ class Parser:
     
     #---Match----------------------------------------------------
     def match(self,token_types):
-        """
-        Tells if the current token_type matches the given token types(s).
-        """
+        """Tells if the current token_type matches the given token types(s)."""
         return self.current_token.type_ in token_types
     
     #---Expect---------------------------------------------------
     def expect(self,token_types):
-        """
-        Matches the current token, if true, then consumes it, else returns error.
-        """
+        """Matches the current token, if true, then consumes it, else returns error."""
         if self.match(token_types):
             tok = self.current_token
             self.advance()
@@ -72,9 +64,7 @@ class Parser:
     
     #---OR Parser------------------------------------------------
     def parse_logical_or(self):
-        """
-        Parses '||' operator.
-        """
+        """Parses '||' operator."""
         left = self.parse_logical_and()
         while self.current_token and self.match([TT_OR]):
             op = self.current_token.token_value
@@ -85,9 +75,7 @@ class Parser:
 
     #---AND parser------------------------------------------
     def parse_logical_and(self):
-        """
-        Parses the '&&' operator.
-        """
+        """Parses the '&&' operator."""
         left = self.parse_comp_expr()
         while self.current_token and self.match([TT_AND]):
             op = self.current_token.token_value
@@ -98,75 +86,105 @@ class Parser:
 
     #---Factor Parser------------------------------------------
     def parse_factor(self):
-        """
-        Parses factors.
-        """
+        """Parses factors."""
+        
+        #---PLUS, MINUS, BANG-----------------
         if self.match([TT_PLUS,TT_MINUS,TT_BANG]):
             op = self.current_token.token_value
             self.advance()
             node = self.parse_factor()
             return UnaryOpNode(op,node)
         
+        #---INT, FLOAT-------------------------
         elif self.match([TT_INT,TT_FLOAT]):
             tok = self.expect([TT_INT,TT_FLOAT])
             return NumberNode(tok)
         
+        #---BOOL-----------------------------   
         elif self.match([TT_BOOL]):
             value = self.current_token.token_value
             self.advance()
             return BooleanLiteral(value)
         
+        #---STRING---------------------------
         elif self.match([TT_STR]):
             value = self.current_token.token_value
             self.advance()
             return StringLiteral(value)
         
+        #---LPAREN------------------------------
         elif self.match([TT_LPAREN]):
             self.expect([TT_LPAREN])
             expression_node = self.parse_logical_or()
             self.expect([TT_RPAREN])
             return expression_node
         
+        #---NULL---------------------------------
         elif self.current_token and self.current_token.token_value == 'Null':
             self.advance()
             return NullLiteral()
 
+        #---FLUX------------------------------------
         elif self.current_token and self.current_token.token_value == 'flux':
             self.advance()
             var_token = self.expect([TT_IDENT])
             self.expect([TT_EQ])
             value = self.parse_logical_or()
             return VarReassignNode(var_token, value)
-            
+        
+        #---IDENTIFIERS-----------------------------------------------------
         elif self.match([TT_IDENT]):
             variable = self.expect([TT_IDENT])
             
+            #---Function Call Checks----------------------------------------
             if self.current_token and self.current_token.type_ == TT_LPAREN:
-
-                self.expect([TT_LPAREN]) 
+                self.advance()
                 
                 args = []
                 if self.current_token and self.current_token.type_ != TT_RPAREN:
-
                     args.append(self.parse_logical_or())
-
                     while self.current_token and self.current_token.type_ == TT_COMMA:
                         self.expect([TT_COMMA])
                         args.append(self.parse_logical_or())
                 
                 self.expect([TT_RPAREN]) 
                 return FuncCallNode(variable.token_value, args)
-            
+
+            #---Indexing & Slicing Checks-----------------------------------------
             elif self.current_token and self.current_token.type_ == TT_LBRACKET:
                 self.advance()
-                start_index = self.parse_logical_or()
+                try:
+                    start_index = self.parse_logical_or()
+                except:
+                    start_index = None 
+
+                #Check if it is a slicing instead of indexing
+                #---End Index-------------------------
+                if self.current_token.type_ == TT_COLON:
+                    self.advance()
+                    try:
+                        end_index = self.parse_logical_or()
+                    except:
+                        end_index = None 
+                #-----------------------------------------
+                    self.expect([TT_COLON])
+                #---Steps---------------------------------
+                    try:
+                        steps = self.parse_logical_or()
+                    except:
+                        steps = None 
+                #------------------------------------------
+                    self.expect([TT_RBRACKET])
+                    return SlicingNode(variable,start_index,end_index,steps)
+                
+                #if not slicing, return indexing node
                 self.expect([TT_RBRACKET])
                 return IndexingNode(variable,start_index)
             
+            #if neither func call, slicing, or indexing, then it is just accessing the variable
             return VarAccessNode(variable)
         
-        
-        
+        #---ARRAYS---------------------------------------
         elif self.match([TT_LBRACKET]):
             self.expect([TT_LBRACKET])
 
@@ -182,9 +200,7 @@ class Parser:
 
     #---Exponents Parser--------------------------------------------------------
     def parse_power(self):
-        """
-        Parser exponents.
-        """
+        """Parser exponents."""
         left = self.parse_factor()
         if self.current_token and self.match([TT_STARSTAR]):
             op = self.current_token.token_value
@@ -195,9 +211,7 @@ class Parser:
     
     #---Term Parser------------------------------------------------------------
     def parse_term(self):
-        """
-        Parses terminals values.
-        """
+        """Parses terminals values."""
         left = self.parse_power()
         while self.current_token and self.match([TT_STAR,TT_SLASH]):
             op = self.current_token.token_value 
@@ -209,9 +223,7 @@ class Parser:
 
     #---Expression Parser-------------------------------------------------------
     def parse_expr(self):
-        """
-        Parses expressions.
-        """
+        """Parses expressions."""
         left = self.parse_term()
         while self.current_token and self.match([TT_PLUS,TT_MINUS]):
             op = self.current_token.token_value
@@ -222,9 +234,7 @@ class Parser:
 
     #---Comparison Parser--------------------------------------------------
     def parse_comp_expr(self):
-        """
-        Parses comparison expressions.
-        """
+        """Parses comparison expressions."""
         left = self.parse_expr()
         while self.current_token and self.match([TT_GT,TT_GTE,TT_LT,TT_LTE,TT_EQEQ,TT_BANGEQ]):
             op = self.current_token.token_value
@@ -235,9 +245,9 @@ class Parser:
     
     #---Parse Statements--------------------------------------------------------
     def parse_statements(self):
-        """
-        Parses statements.
-        """
+        """Parses statements."""
+        
+        #---Declaration using const and dec--------------------------------
         if self.current_token and self.current_token.token_value in ('dec','const'):
             if self.current_token.token_value == 'const':
                 is_const = True
@@ -245,7 +255,7 @@ class Parser:
                 var_name_token = self.expect([TT_IDENT])
                 self.expect([TT_EQ])
                 
-                #checking if an array is being declared with const then raising error
+                #checking if an array is being declared with const, then raising error if it is 
                 if self.current_token.token_value != '[':
                     var_value_node = self.parse_comp_expr()
                     return VarAssignNode(var_name_token,var_value_node,is_const)
@@ -260,27 +270,23 @@ class Parser:
                 var_value_node = self.parse_comp_expr()
                 return VarAssignNode(var_name_token,var_value_node,is_const)
 
-        
+        #---IF and ELSE--------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'if':
             self.advance()
             self.expect([TT_LPAREN])
             condition = self.parse_logical_or()
             self.expect([TT_RPAREN])
-            # self.expect([TT_LBRACE])
             if_body = self.parse_blocks()
             if not if_body:
                 raise ControlFLowError("if",self.current_token.line,self.current_token.col)
-            # self.expect([TT_RBRACE])
 
             else_body = None 
             if self.current_token and self.current_token.token_value == 'else':
                 self.advance()
-                # self.expect([TT_LBRACE])
                 else_body = self.parse_blocks()
-                # self.expect([TT_RBRACE])
-            
             return IfNode(condition,if_body,else_body)
 
+        #---WHILE Iterator-----------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'while':
             self.expect([self.current_token.type_])
             self.expect([TT_LPAREN])
@@ -291,6 +297,7 @@ class Parser:
                 raise ControlFLowError("while",self.current_token.line,self.current_token.col)
             return WhileNode(condition,while_body)
         
+        #---Functions-------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'func':
             self.expect([self.current_token.type_])
             func_name = self.current_token.token_value
@@ -308,6 +315,7 @@ class Parser:
                 raise NullFuncBody(self.current_token.line,self.current_token.col)
             return FuncDefNode(func_name,params,func_body)
         
+        #---Return------------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'return':
             self.expect([self.current_token.type_])
             value = None
@@ -315,10 +323,12 @@ class Parser:
                 value = self.parse_logical_or()
             return ReturnNode(value)
 
+        #---Break-------------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'break':
             self.advance()
             return BreakNode()
         
+        #---Standard output function--------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'stdout':
             self.expect([self.current_token.type_])
             self.expect([TT_LPAREN])
@@ -326,6 +336,7 @@ class Parser:
             self.expect([TT_RPAREN])
             return StdOutNode(value)
         
+        #---Scan---------------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'scan':
             self.expect([self.current_token.type_])
             self.expect(TT_LPAREN)
@@ -336,16 +347,13 @@ class Parser:
             self.advance()
             self.expect([TT_RPAREN])
             return ScanNode(variable,type_)
-        
         else:
             expr = self.parse_logical_or()
             return expr
     
     #---Statement List Parser------------------------------------------------------
     def parse_statements_list(self):
-        """
-        Parses statements inside a block until '}' is reached.
-        """
+        """Parses statements inside a block until '}' is reached."""
         statements = []
         while self.current_token and self.current_token.type_ != TT_RBRACE:
             stmt = self.parse_statements()
@@ -357,9 +365,7 @@ class Parser:
 
 
     def parse_blocks(self):
-        """
-        Parses blocks '{}'.
-        """
+        """Parses blocks '{}'."""
         if self.current_token and self.current_token.type_ == TT_LBRACE:
             self.expect([TT_LBRACE])
             statements = self.parse_statements_list()
@@ -367,9 +373,7 @@ class Parser:
             return statements
 
     def parse(self):
-        """
-        The main parser method from where the parsing begins.
-        """
+        """The main parser method from where the parsing begins."""
         statements = []
         while self.current_token and self.current_token.type_ != TT_EOF:
             stmt = self.parse_statements()
