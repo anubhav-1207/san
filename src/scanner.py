@@ -68,7 +68,7 @@ KEYWORDS = {
     'loop', 'for', 'in', 'break', 'skip',
     'stdout', 'scan',
     'Null',
-    'use', 'type', 'init', 'ext',
+    'use',
     'try', 'catch', 'drop',
     'int','float','str','bool',
 }
@@ -352,7 +352,7 @@ class Lexer:
             elif char in ALPHABETS or char == '_': 
                 read_ident(self)
             
-            #---Numbers----------------------
+            #---Numbers----------stdout(typeof("hello"))------------
             elif char in NUMBERS: 
                 read_numbers(self)
             

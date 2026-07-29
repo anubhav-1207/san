@@ -400,7 +400,6 @@ class Evaluator:
         value = self.evaluate(node.value) if node.value else None
         raise ReturnException(value)
 
-
 ########################################################################
 #                         END OF FILE                                  #
 ########################################################################
