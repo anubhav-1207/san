@@ -347,9 +347,17 @@ class Parser:
             self.advance()
             self.expect([TT_RPAREN])
             return ScanNode(variable,type_)
+        #---Use-----------------------------------------------------------------------
+        elif self.current_token and self.current_token.token_value == 'use':
+            self.advance()
+            library = self.current_token.token_value
+            self.advance()
+            return UseNode(library)
+
         else:
             expr = self.parse_logical_or()
             return expr
+        
     
     #---Statement List Parser------------------------------------------------------
     def parse_statements_list(self):

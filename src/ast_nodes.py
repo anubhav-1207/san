@@ -207,6 +207,13 @@ class ScanNode(AST):
         self.type_ = type_
     def __repr__(self):
         return f"(SCAN {self.variable}:{self.type_})"
+
+class UseNode(AST):
+    def __init__(self,library):
+        self.library = library 
+    
+    def __repr__(self):
+        return f"(Use {self.library})"
 #---------------------------------------------------------------------
 
 #####################################################################
