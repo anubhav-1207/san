@@ -17,7 +17,6 @@ class NativeArrayFunction:
         self.expected_args = expected_args
         self.method = method
         self.is_native = True
-        self.is_const = is_const
 
 #==========================================================================
 #                          Built In Methods

@@ -6,6 +6,7 @@ from .ast_nodes import *
 from src.stdlib import *
 from src.stdlib.native_arrays import inject_array_methods
 from src.stdlib.native_string import inject_string_methods
+from src.stdlib.native_builtins import inject_builtin_methods
 
 #---Error Classes-------------------------------------------------------------------------------
 class AccidentalReassError(Exception):
@@ -111,6 +112,7 @@ class Evaluator:
 
         inject_array_methods(self.functions)
         inject_string_methods(self.functions)
+        inject_builtin_methods(self.functions)
     
     def evaluate(self,node):
         """Gets the node name and visits the node."""
