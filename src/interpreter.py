@@ -7,6 +7,7 @@ from src.stdlib import *
 from src.stdlib.native_arrays import inject_array_methods
 from src.stdlib.native_string import inject_string_methods
 from src.stdlib.native_builtins import inject_builtin_methods
+from src.stdlib.native_math import inject_math_methods
 
 #---Error Classes-------------------------------------------------------------------------------
 class AccidentalReassError(Exception):
@@ -113,6 +114,8 @@ class Evaluator:
         inject_array_methods(self.functions)
         inject_string_methods(self.functions)
         inject_builtin_methods(self.functions)
+        inject_math_methods(self.functions)
+
     
     def evaluate(self,node):
         """Gets the node name and visits the node."""
@@ -399,7 +402,14 @@ class Evaluator:
     def visit_ReturnNode(self,node):
         value = self.evaluate(node.value) if node.value else None
         raise ReturnException(value)
+    
+    def visit_UseNode(self,node):
+        library = node.library
 
+        if library == "math":
+            print("Math imported")
+            # inject_math_methods(self.functions)
+        
 ########################################################################
 #                         END OF FILE                                  #
 ########################################################################
