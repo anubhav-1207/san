@@ -122,4 +122,8 @@ def trunc(args):
     number = args[0]
     return mathtrunc(number)
 
-def fabs(args)
+def fabs(args):
+    number = args[0]
+    return mathfabs(number)
+
+def copysign(args)
