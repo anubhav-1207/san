@@ -36,7 +36,7 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Scoping**: Proper lexical scoping with environment chains
 - **Standard Library**: Consisting of various modules
 
-### [Try out San in your browser](https://san-qftd.onrender.com)
+### [Try out San in your browser - might be broken, use only for small scripts.](https://san-qftd.onrender.com)
 
 
 
