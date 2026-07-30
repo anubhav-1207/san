@@ -117,3 +117,9 @@ def floor(args):
 def ceil(args):
     number = args[0]
     return mathfloor(number)
+
+def trunc(args):
+    number = args[0]
+    return mathtrunc(number)
+
+def fabs(args)
