@@ -21,10 +21,6 @@ from math import sqrt as mathsqrt
 from math import pow as mathpow
 from math import exp as mathexp
 from math import expm1 as mathexpm1
-from math import log as mathlog
-from math import log1p
-from math import log2
-from math import log10
 from math import degrees
 from math import radians
 from math import sinh
@@ -164,4 +160,6 @@ def expm1(args):
     x = args[0]
     return mathexpm1(x)
 
-def 
+def log(args):
+    x = args[0]
+    base = 
