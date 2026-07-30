@@ -17,8 +17,8 @@ from math import fsum as mathfsum
 from math import modf as mathmodf
 from math import frexp as mathfrexp
 from math import ldexp as mathldexp
-from math import sqrt
-from math import pow
+from math import sqrt as mathsqrt
+from math import pow as mathpow
 from math import exp
 from math import expm1
 from math import log 
@@ -147,4 +147,11 @@ def ldexp(args):
     number = args[0]
     return mathldexp(number)
 
-def 
+def sqrt(args):
+    number = args[0]
+    return mathsqrt(number)
+
+def power(args):
+    x = args[0]
+    y = args[1]
+    return mathpow(x,y)
