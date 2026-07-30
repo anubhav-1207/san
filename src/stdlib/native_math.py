@@ -16,7 +16,7 @@ from math import copysign as mathcopysign
 from math import fsum as mathfsum
 from math import modf as mathmodf
 from math import frexp as mathfrexp
-from math import ldexp as math ldexp
+from math import ldexp as mathldexp
 from math import sqrt
 from math import pow
 from math import exp
@@ -143,4 +143,8 @@ def frexp(args):
     number = args[0]
     return mathfrexp(number)
 
-def ldexp(args)
+def ldexp(args):
+    number = args[0]
+    return mathldexp(number)
+
+def 
