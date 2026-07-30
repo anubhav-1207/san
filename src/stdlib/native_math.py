@@ -28,33 +28,16 @@ from math import cosh as mathcosh
 from math import tanh as mathtanh
 from math import asinh as mathasinh
 from math import acosh as mathacosh
-from math import atanh
+from math import atanh as mathatanh
 from math import factorial
-from math import comb
-from math import perm
-from math import gcd
-from math import lcm
-from math import erf
-from math import erfc
-from math import gamma
-from math import lgamma
 from math import pi
 from math import e
-from math import tau
 from math import inf
 from math import nan
-from math import isinf
-from math import isfinite
-from math import isnan
 from math import isqrt
 from math import dist
 from math import prod
 from math import remainder
-from math import nextafter
-from math import ulp
-from math import scalbn
-from math import fmod
-from math import atan2
 
 
 
@@ -188,4 +171,8 @@ def acosh(args):
     x = args[0]
     return mathacosh(x)
 
-def atanh(args)
+def tanh(args):
+    x = args[0]
+    return mathatanh(x)
+
+def factorial
