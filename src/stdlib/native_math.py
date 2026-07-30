@@ -19,7 +19,7 @@ from math import frexp as mathfrexp
 from math import ldexp as mathldexp
 from math import sqrt as mathsqrt
 from math import pow as mathpow
-from math import exp
+from math import exp as mathexp
 from math import expm1
 from math import log 
 from math import log1p
@@ -155,3 +155,9 @@ def power(args):
     x = args[0]
     y = args[1]
     return mathpow(x,y)
+
+def exp(args):
+    x = args[0]
+    return mathexp(x)
+
+def expm1
