@@ -26,9 +26,9 @@ from math import radians as mathradians
 from math import sinh as mathsinh
 from math import cosh as mathcosh
 from math import tanh as mathtanh
-from math import asinh
-from math import acosh
-from math import atanx
+from math import asinh as mathasinh
+from math import acosh as mathacosh
+from math import atanh
 from math import factorial
 from math import comb
 from math import perm
@@ -181,4 +181,11 @@ def tanh(args):
     return mathtanh(x)
 
 def asinh(args):
-    
+    x = args[0]
+    return mathasinh(x)
+
+def acosh(args):
+    x = args[0]
+    return mathacosh(x)
+
+def atanh(args)
