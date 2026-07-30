@@ -138,3 +138,9 @@ def fsum(args):
 def modf(args):
     number = args[0]
     return mathmodf(number)
+
+def frexp(args):
+    number = args[0]
+    return mathfrexp(number)
+
+def ldexp(args)
