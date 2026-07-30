@@ -131,4 +131,10 @@ def copysign(args):
     y = args[1]
     return mathcopysign(x, y)
 
-def fsum
+def fsum(args):
+    iterable = args[0]
+    return mathfsum(iterable)
+
+def modf(args):
+    number = args[0]
+    return mathmodf(number)
