@@ -126,4 +126,9 @@ def fabs(args):
     number = args[0]
     return mathfabs(number)
 
-def copysign(args)
+def copysign(args):
+    x = args[0]
+    y = args[1]
+    return mathcopysign(x, y)
+
+def fsum
