@@ -21,10 +21,10 @@ from math import sqrt as mathsqrt
 from math import pow as mathpow
 from math import exp as mathexp
 from math import expm1 as mathexpm1
-from math import degrees
-from math import radians
-from math import sinh
-from math import cosh
+from math import degrees as mathdegrees
+from math import radians as mathradians
+from math import sinh as mathsinh
+from math import cosh as mathcosh
 from math import tanh
 from math import asinh
 from math import acosh
@@ -160,6 +160,18 @@ def expm1(args):
     x = args[0]
     return mathexpm1(x)
 
-def log(args):
+def degrees(args):
     x = args[0]
-    base = 
+    return mathdegrees(x)
+
+def radians(args):
+    x = args[0]
+    return mathradians(x)
+
+def sinh(args):
+    x = args[0]
+    return mathsinh(x)
+
+def cosh(args):
+    x = args[0]
+    return mathcosh(x)
