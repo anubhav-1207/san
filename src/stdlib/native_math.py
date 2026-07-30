@@ -20,8 +20,8 @@ from math import ldexp as mathldexp
 from math import sqrt as mathsqrt
 from math import pow as mathpow
 from math import exp as mathexp
-from math import expm1
-from math import log 
+from math import expm1 as mathexpm1
+from math import log as mathlog
 from math import log1p
 from math import log2
 from math import log10
@@ -160,4 +160,8 @@ def exp(args):
     x = args[0]
     return mathexp(x)
 
-def expm1
+def expm1(args):
+    x = args[0]
+    return mathexpm1(x)
+
+def 
