@@ -10,9 +10,9 @@
 
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-![Lines of Code](https://img.shields.io/badge/Lines%20of%20Code-~1,921-brightgreen)
+![Lines of Code](https://img.shields.io/badge/Lines%20of%20Code-~2,296-red)
 
-![Status](https://img.shields.io/badge/Status-Complete-success)
+![Status](https://img.shields.io/badge/Status-In_Development-yellow)
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
 
@@ -34,7 +34,7 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Functions**: First-class function definitions with parameters, closures, and `return` values
 - **I/O**: `stdout()` for printing, `scan(variable)` for user input
 - **Scoping**: Proper lexical scoping with environment chains
-- **Standard Library**: Consisting of various methods for `strings` and `arrays`
+- **Standard Library**: Consisting of various modules
 
 ### [Try out San in your browser](https://san-qftd.onrender.com)
 
@@ -148,6 +148,14 @@ string[1:2:1]
 array[3]
 //Array Slicing
 array[::-1]
+```
+
+## Libraries
+```c
+use math
+stdout(sin(1))
+stdout(cos(2))
+stdout("Many more functions!!!");
 ```
 
 
