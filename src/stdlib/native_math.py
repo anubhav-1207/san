@@ -25,7 +25,7 @@ from math import degrees as mathdegrees
 from math import radians as mathradians
 from math import sinh as mathsinh
 from math import cosh as mathcosh
-from math import tanh
+from math import tanh as mathtanh
 from math import asinh
 from math import acosh
 from math import atanx
@@ -175,3 +175,10 @@ def sinh(args):
 def cosh(args):
     x = args[0]
     return mathcosh(x)
+
+def tanh(args):
+    x = args[0]
+    return mathtanh(x)
+
+def asinh(args):
+    
