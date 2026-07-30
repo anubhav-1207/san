@@ -188,8 +188,8 @@ San is a programming language that has a great potential to be someone's first l
 
 # Acknowledgements
 A huge thanks to:
-- People of r/compilers in reddit
-- To LLMs (ChatGPT, Gemini, Claude), though I Didnt vibe-coded it, but I learnt it with the help of AI because most of the tutorials were in Java or C, which I didn't knew.
+- People of `r/compilers` in reddit
+- To LLMs (ChatGPT, Gemini, Claude), though I didn't vibe-code it, but I learnt it with the help of AI because most of the tutorials were in Java or C, which I didn't knew.
 - To myself, for motivation
-- My friend Aditya Vishal for resources, though he is not in programming field, but he provided me with much needed basic stuff when I could not buy them.
+- My friend Aditya Vishal for resources, though he is not in programming field, but he provided me with much needed basic stuff when I did not have them.
 - Ofcourse, towards coffee. 
