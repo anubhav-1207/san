@@ -29,15 +29,15 @@ from math import tanh as mathtanh
 from math import asinh as mathasinh
 from math import acosh as mathacosh
 from math import atanh as mathatanh
-from math import factorial
-from math import pi
-from math import e
-from math import inf
-from math import nan
-from math import isqrt
-from math import dist
-from math import prod
-from math import remainder
+from math import factorial as mathfactorial
+from math import pi as mathpi
+from math import e as mathe
+from math import inf as mathinf
+from math import nan as mathnan
+from math import isqrt as mathisqrt
+from math import dist as mathdist
+from math import prod as mathprod
+from math import remainder as mathremainder
 
 
 
@@ -175,4 +175,33 @@ def tanh(args):
     x = args[0]
     return mathatanh(x)
 
-def factorial
+def factorial(args):
+    x = args[0]
+    return mathfactorial(x)
+
+def pi(args):
+    return mathpi()
+
+def e(args):
+    return mathe()
+
+def inf(args):
+    return mathinf()
+
+def isqrt(args):
+    x = args[0]
+    return mathisqrt(x)
+
+def dist(args):
+    x = args[0]
+    y = args[1]
+    return mathdist(x,y)
+
+def prod(args):
+    iterable = args[0]
+    return mathprod(iterable)
+
+def remainder(args):
+    x = args[0]
+    y = args[1]
+    return mathremainder(x,y)
