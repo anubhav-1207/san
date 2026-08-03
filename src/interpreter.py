@@ -118,7 +118,6 @@ class Evaluator:
         inject_array_methods(self.functions)
         inject_string_methods(self.functions)
         inject_builtin_methods(self.functions)
-        inject_math_methods(self.functions)
 
     
     def evaluate(self,node):
@@ -413,6 +412,6 @@ class Evaluator:
         if library == "math":
             inject_math_methods(self.functions)
         
-########################################################################
-#                         END OF FILE                                  #
-########################################################################
+# ########################################################################
+# #                         END OF FILE                                  #
+# ########################################################################

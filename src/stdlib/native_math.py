@@ -80,13 +80,14 @@ def inject_math_methods(function_table):
     function_table["acosh"] = NativeFuncNode("acosh",1,acosh)
     function_table["atanh"] = NativeFuncNode("atanh",1,atanh)
     function_table["factorial"] = NativeFuncNode("factorial",1,factorial)
-    function_table["pi"] = NativeFuncNode("pi",1,pi)
-    function_table["e"] = NativeFuncNode("e",1,e)
-    function_table["inf"] = NativeFuncNode("inf",1,inf)
+    function_table["pi"] = NativeFuncNode("pi",0,pi)
+    function_table["e"] = NativeFuncNode("e",0,e)
+    function_table["inf"] = NativeFuncNode("inf",0,inf)
     function_table["isqrt"] = NativeFuncNode("isqrt",1,isqrt)
     function_table["dist"] = NativeFuncNode("dist",2,dist)
     function_table["prod"] = NativeFuncNode("prod",1,prod)
     function_table["remainder"] = NativeFuncNode("remainder",1,remainder)
+    function_table["nan"] = NativeFuncNode("nan",0,nan)
 
 #---Actual Methods---------------------------------------------------------------
 def sin(args):
@@ -208,13 +209,13 @@ def factorial(args):
     return mathfactorial(x)
 
 def pi(args):
-    return mathpi()
+    return mathpi
 
 def e(args):
-    return mathe()
+    return mathe
 
 def inf(args):
-    return mathinf()
+    return mathinf
 
 def isqrt(args):
     x = args[0]
@@ -233,3 +234,8 @@ def remainder(args):
     x = args[0]
     y = args[1]
     return mathremainder(x,y)
+
+def nan(args):
+    return mathnan
+
+# print(mathpi.__doc__)
