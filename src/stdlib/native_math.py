@@ -84,7 +84,7 @@ def inject_math_methods(function_table):
     function_table["e"] = NativeFuncNode("e",1,e)
     function_table["inf"] = NativeFuncNode("inf",1,inf)
     function_table["isqrt"] = NativeFuncNode("isqrt",1,isqrt)
-    function_table["dist"] = NativeFuncNode("dist",1,dist)
+    function_table["dist"] = NativeFuncNode("dist",2,dist)
     function_table["prod"] = NativeFuncNode("prod",1,prod)
     function_table["remainder"] = NativeFuncNode("remainder",1,remainder)
 
