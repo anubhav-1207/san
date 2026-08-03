@@ -73,6 +73,22 @@ def inject_math_methods(function_table):
     function_table["exp"] = NativeFuncNode("expm1",1,expm1)
     function_table["degrees"] = NativeFuncNode("degrees,1,degrees")
     function_table["radians"] = NativeFuncNode("radians",1,radians)
+    function_table["sinh"] = NativeFuncNode("sinh",1,sinh)
+    function_table["cosh"] = NativeFuncNode("cosh",1,cosh)
+    function_table["tanh"] = NativeFuncNode("tanh",1,tanh)
+    function_table["asinh"] = NativeFuncNode("asinh",1,asinh)
+    function_table["acosh"] = NativeFuncNode("acosh",1,acosh)
+    function_table["atanh"] = NativeFuncNode("atanh",1,atanh)
+    function_table["factorial"] = NativeFuncNode("factorial",1,factorial)
+    function_table["pi"] = NativeFuncNode("pi",1,pi)
+    function_table["e"] = NativeFuncNode("e",1,e)
+    function_table["inf"] = NativeFuncNode("inf",1,inf)
+    function_table["isqrt"] = NativeFuncNode("isqrt",1,isqrt)
+    function_table["dist"] = NativeFuncNode("dist",1,dist)
+    function_table["prod"] = NativeFuncNode("prod",1,prod)
+    function_table["remainder"] = NativeFuncNode("remainder",1,remainder)
+
+
 
 def sin(args):
     angle = args[0]
@@ -184,7 +200,7 @@ def acosh(args):
     x = args[0]
     return mathacosh(x)
 
-def tanh(args):
+def atanh(args):
     x = args[0]
     return mathatanh(x)
 
