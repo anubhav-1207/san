@@ -42,6 +42,10 @@ class UnrecognisedBinaryOp(Exception):
     def __init__(self,op):
         super().__init__(f"class source.non-fatal:: unrecognised binary operator encountered - this error was not even possible to occur, if it did, congratulations, you went horribly wrong somewhere. You're on your own now - '{op}' ,\n\t\t---> interpreter exited with error[#INTRPTR006]")
 
+class InsufficientFuncArgs(Exception):
+    def __init__(self):
+        super().__init__(f"class source.fatal:: in-built function did not recieved specified arguements,\n\t\t---> interpreter exited with error[#INTRPTR007]")
+
 class BreakException(Exception):
     pass
 
@@ -114,7 +118,6 @@ class Evaluator:
         inject_array_methods(self.functions)
         inject_string_methods(self.functions)
         inject_builtin_methods(self.functions)
-        inject_math_methods(self.functions)
 
     
     def evaluate(self,node):
@@ -372,7 +375,7 @@ class Evaluator:
             evaluated_args = [self.evaluate(arg) for arg in node.func_args]
 
             if len(evaluated_args) != func_def.expected_args:
-                raise Exception("Not sufficient ARGS")
+                raise InsufficientFuncArgs()
         
             return func_def.method(evaluated_args)
 
@@ -407,9 +410,8 @@ class Evaluator:
         library = node.library
 
         if library == "math":
-            print("Math imported")
-            # inject_math_methods(self.functions)
+            inject_math_methods(self.functions)
         
-########################################################################
-#                         END OF FILE                                  #
-########################################################################
+# ########################################################################
+# #                         END OF FILE                                  #
+# ########################################################################
