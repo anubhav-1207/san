@@ -56,6 +56,23 @@ def inject_math_methods(function_table):
     function_table["cos"] = NativeFuncNode("cos",1,cos)
     function_table["tan"] = NativeFuncNode("tan",1,tan)
     function_table["floor"] = NativeFuncNode("floor",1,floor)
+    function_table["asin"] = NativeFuncNode("asin",1,asin)
+    function_table["acos"] = NativeFuncNode("acos",1,acos)
+    function_table["atan"] = NativeFuncNode("atan",1,atan)
+    function_table["atan2"] = NativeFuncNode("atan2",1,atan2)
+    function_table["ceil"] = NativeFuncNode("ceil",1,ceil)
+    function_table["trunc"] = NativeFuncNode("trunc",1,trunc)
+    function_table["fabs"] = NativeFuncNode("fabs",1,fabs)
+    function_table["copysign"] = NativeFuncNode("copysign",2,copysign)
+    function_table["fsum"] = NativeFuncNode("fsum",1,fsum)
+    function_table["modf"] = NativeFuncNode("modf",1,modf)
+    function_table["frexp"] = NativeFuncNode("frexp",1,frexp)
+    function_table["ldexp"] = NativeFuncNode("ldexp",1,ldexp)
+    function_table["sqrt"] = NativeFuncNode("sqrt",1,sqrt)
+    function_table["power"] = NativeFuncNode("power",2,power)
+    function_table["exp"] = NativeFuncNode("expm1",1,expm1)
+    function_table["degrees"] = NativeFuncNode("degrees,1,degrees")
+    function_table["radians"] = NativeFuncNode("radians",1,radians)
 
 def sin(args):
     angle = args[0]
@@ -88,10 +105,6 @@ def atan(args):
 def atan2(args):
     angle = args[0]
     return mathatan2(angle)
-
-def floor(args):
-    angle = args[0]
-    return mathfloor(angle)
 
 def ceil(args):
     number = args[0]
