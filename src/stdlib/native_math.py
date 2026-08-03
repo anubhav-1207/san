@@ -88,8 +88,7 @@ def inject_math_methods(function_table):
     function_table["prod"] = NativeFuncNode("prod",1,prod)
     function_table["remainder"] = NativeFuncNode("remainder",1,remainder)
 
-
-
+#---Actual Methods---------------------------------------------------------------
 def sin(args):
     angle = args[0]
     return mathsin(angle)
