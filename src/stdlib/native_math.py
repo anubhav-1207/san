@@ -71,7 +71,7 @@ def inject_math_methods(function_table):
     function_table["sqrt"] = NativeFuncNode("sqrt",1,sqrt)
     function_table["power"] = NativeFuncNode("power",2,power)
     function_table["exp"] = NativeFuncNode("expm1",1,expm1)
-    function_table["degrees"] = NativeFuncNode("degrees,1,degrees")
+    function_table["degrees"] = NativeFuncNode("degrees",1,degrees)
     function_table["radians"] = NativeFuncNode("radians",1,radians)
     function_table["sinh"] = NativeFuncNode("sinh",1,sinh)
     function_table["cosh"] = NativeFuncNode("cosh",1,cosh)
