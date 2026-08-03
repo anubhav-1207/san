@@ -45,6 +45,7 @@ from math import remainder as mathremainder
 
 
 class NativeFuncNode:
+    """Represent a native math function bound for the interpreter."""
     def __init__(self,name,expected_args,method):
         self.name = name 
         self.expected_args = expected_args
@@ -52,6 +53,7 @@ class NativeFuncNode:
         self.is_native = True 
     
 def inject_math_methods(function_table):
+    """Register native math functions in the interpreter's function table."""
     function_table["sin"] = NativeFuncNode("sin",1,sin)
     function_table["cos"] = NativeFuncNode("cos",1,cos)
     function_table["tan"] = NativeFuncNode("tan",1,tan)
@@ -91,151 +93,188 @@ def inject_math_methods(function_table):
 
 #---Actual Methods---------------------------------------------------------------
 def sin(args):
+    """Return the sine of the first argument."""
     angle = args[0]
     return mathsin(angle)
 
 def cos(args):
+    """Return the cosine of the first argument."""
     angle = args[0]
     return mathcos(angle)
 
 def tan(args):
+    """Return the tangent of the first argument."""
     angle = args[0]
     return mathtan(angle)
 
 def floor(args):
+    """Return the floor of the first argument."""
     number = args[0]
     return mathfloor(number)
 
 def asin(args):
+    """Return the arcsine of the first argument."""
     angle = args[0]
     return mathasin(angle)
 
 def acos(args):
+    """Return the arccosine of the first argument."""
     angle = args[0]
     return mathacos(angle)
 
 def atan(args):
+    """Return the arctangent of the first argument."""
     angle = args[0]
     return mathacos(angle)
 
 def atan2(args):
+    """Return atan2 of the two arguments."""
     angle = args[0]
     return mathatan2(angle)
 
 def ceil(args):
+    """Return the ceiling of the first argument."""
     number = args[0]
     return mathfloor(number)
 
 def trunc(args):
+    """Return the truncated integer value of the first argument."""
     number = args[0]
     return mathtrunc(number)
 
 def fabs(args):
+    """Return the absolute value of the first argument."""
     number = args[0]
     return mathfabs(number)
 
 def copysign(args):
+    """Return x with the sign of y."""
     x = args[0]
     y = args[1]
     return mathcopysign(x, y)
 
 def fsum(args):
+    """Return an accurate floating-point sum of the iterable."""
     iterable = args[0]
     return mathfsum(iterable)
 
 def modf(args):
+    """Return the fractional and integer parts of the first argument."""
     number = args[0]
     return mathmodf(number)
 
 def frexp(args):
+    """Return mantissa and exponent of the first argument."""
     number = args[0]
     return mathfrexp(number)
 
 def ldexp(args):
+    """Return the first argument scaled by 2 raised to the second."""
     number = args[0]
     return mathldexp(number)
 
 def sqrt(args):
+    """Return the square root of the first argument."""
     number = args[0]
     return mathsqrt(number)
 
 def power(args):
+    """Return the first argument raised to the second power."""
     x = args[0]
     y = args[1]
     return mathpow(x,y)
 
 def exp(args):
+    """Return e raised to the power of the first argument."""
     x = args[0]
     return mathexp(x)
 
 def expm1(args):
+    """Return e**x - 1 for the first argument."""
     x = args[0]
     return mathexpm1(x)
 
 def degrees(args):
+    """Convert radians to degrees for the first argument."""
     x = args[0]
     return mathdegrees(x)
 
 def radians(args):
+    """Convert degrees to radians for the first argument."""
     x = args[0]
     return mathradians(x)
 
 def sinh(args):
+    """Return the hyperbolic sine of the first argument."""
     x = args[0]
     return mathsinh(x)
 
 def cosh(args):
+    """Return the hyperbolic cosine of the first argument."""
     x = args[0]
     return mathcosh(x)
 
 def tanh(args):
+    """Return the hyperbolic tangent of the first argument."""
     x = args[0]
     return mathtanh(x)
 
 def asinh(args):
+    """Return the inverse hyperbolic sine of the first argument."""
     x = args[0]
     return mathasinh(x)
 
 def acosh(args):
+    """Return the inverse hyperbolic cosine of the first argument."""
     x = args[0]
     return mathacosh(x)
 
 def atanh(args):
+    """Return the inverse hyperbolic tangent of the first argument."""
     x = args[0]
     return mathatanh(x)
 
 def factorial(args):
+    """Return the factorial of the first integer argument."""
     x = args[0]
     return mathfactorial(x)
 
 def pi(args):
+    """Return the constant pi."""
     return mathpi
 
 def e(args):
+    """Return the constant e."""
     return mathe
 
 def inf(args):
+    """Return positive infinity."""
     return mathinf
 
 def isqrt(args):
+    """Return the integer square root of the first argument."""
     x = args[0]
     return mathisqrt(x)
 
 def dist(args):
+    """Return the Euclidean distance between two points."""
     x = args[0]
     y = args[1]
     return mathdist(x,y)
 
 def prod(args):
+    """Return the product of values in the iterable."""
     iterable = args[0]
     return mathprod(iterable)
 
 def remainder(args):
+    """Return the IEEE 754-style remainder of x / y."""
     x = args[0]
     y = args[1]
     return mathremainder(x,y)
 
 def nan(args):
+    """Return a NaN value."""
     return mathnan
 
 # print(mathpi.__doc__)
