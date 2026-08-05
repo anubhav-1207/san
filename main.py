@@ -2,8 +2,9 @@
 #------------------------------------------------------------------------
 # This is the entry point for San. 
 # All programmes start from here 
-#----------------------------------------------------------------------------------------------------
-#---Importing Dependencies---------------------------------------------
+#------------------------------------------------------------------------
+
+# ---Importing Dependencies---------------------------------------------
 import sys
 import src
 import colorama
@@ -16,7 +17,7 @@ from src.interpreter import *
 init(autoreset = True)
 #-----------------------------------------------------------------------
 
-#---File Runner Function-------------------------------------------------------------------
+#---File Runner Function-----------------------------------------------
 def run_file(filename,pipeline_flags=False):
     """
     Reads the terminal input and runs the file.
@@ -79,7 +80,7 @@ def run_file(filename,pipeline_flags=False):
             evaluator = Evaluator()
             evaluator.evaluate(ast)
 
-    except (InvalidTokenError, UnterminatedStringLiteral, InvalidIdentifier, InvalidFloatLiteral, UnintialisedStringLiteral,UnexpectedTokenError,ControlFLowError, NullFuncBody,AccidentalReassError,UndefinedVariable,ConstantMutation,UndefinedFunc,ZeroDivisionError,ConstantArrayError,InsufficientFuncArgs) as e:
+    except (InvalidTokenError, UnterminatedStringLiteral, InvalidIdentifier, InvalidFloatLiteral, UnintialisedStringLiteral,UnexpectedTokenError,ControlFLowError, NullFuncBody,AccidentalReassError,UndefinedVariable,ConstantMutation,UndefinedFunc,ZeroDivisionError,ConstantArrayError,InsufficientFuncArgs,InvalidLibraryImported) as e:
         print(Fore.RED+f"{e.__class__.__name__}: {e}")
 
 #---Running The File------------------------------------------------------------------

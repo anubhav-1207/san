@@ -6,6 +6,9 @@
 # - setint()
 # - setstr()
 # - setfloat()
+
+# The built-in methods are automatically loaded into the memory and importing this will
+# raise error
 #-----------------------------------------------------------------------------------
 
 #---Native Function Node------------------------------------------------------------

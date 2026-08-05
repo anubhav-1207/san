@@ -9,7 +9,7 @@ from src.stdlib.native_string import inject_string_methods
 from src.stdlib.native_builtins import inject_builtin_methods
 from src.stdlib.native_math import inject_math_methods
 
-#---Error Classes-------------------------------------------------------------------------------
+#---Error Classes---------------------------------------------------------------
 class AccidentalReassError(Exception):
     def __init__(self,var):
         super().__init__(f"class source.fatal:: environmental variable '{var.token_value}' already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001]")
@@ -46,12 +46,17 @@ class InsufficientFuncArgs(Exception):
     def __init__(self):
         super().__init__(f"class source.fatal:: in-built function did not recieved specified arguements,\n\t\t---> interpreter exited with error[#INTRPTR007]")
 
+class InvalidLibraryImported(Exception):
+    def __init__(self,library):
+        super().__init__(f"class source.fatal :: no in-built library found named {library},\n\t\t---> interpreter exited with error[#INTRPTR007]")
+
 class BreakException(Exception):
     pass
 
 class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
+#-----------------------------------------------------------------------------------------------------
 
 
 #---STDLIB built-in Functions--------------------------------------------------------------------------
@@ -63,12 +68,12 @@ class NativeFuncNode:
         self.method = method 
         self.is_const = is_const
 
-#---Visitor Nodes-------------------------------------------------------------------------------
+#---Visitor Nodes------------------------------------------------------------
 class Environment:
     """Creates a namespace to store variables."""
     def __init__(self,parent=None):
-        self.parent = parent
-        self.vars = {}
+        self.parent = parent #parent scope
+        self.vars = {} #symbol table to store all variables and their values
 
     #---Enters a value in the namespace-----------------
     def define(self,name,value,is_const=False):
@@ -107,31 +112,42 @@ class Environment:
         
         else:
             raise UndefinedVariable(name)
+#----------------------------------------------------------------------------------------------
 
-
+#---Evaluator Class---------------------------------------------------------------------------
 class Evaluator:
+    """The main engine of the interpreter that does all the work expected by any interpreter."""
     def __init__(self):
         self.global_env = Environment()
         self.current_env = self.global_env
         self.functions = {}
+        self.builtInLibraries = ('math',)
 
+        #---Load in-built methods into the scope-----------
         inject_array_methods(self.functions)
         inject_string_methods(self.functions)
         inject_builtin_methods(self.functions)
-
+        #--------------------------------------------------
     
+    #---Evaluate Func----------------------------
     def evaluate(self,node):
         """Gets the node name and visits the node."""
         method_name = f"visit_{node.__class__.__name__}"
         visitor = getattr(self,method_name,None)
+
         if visitor is None:
             raise Exception(f"No visitor for {node.__class__.__name__}")
+
         return visitor(node)
     
+#============================================================================
+    #---Visitor Nodes-------------------------------------------------
     def visit_ProgramNode(self,node):
         result = None
+
         for statement in node.statements:
             result = self.evaluate(statement)
+
         return result
 
     def is_truthy(self,operand) -> bool:
@@ -177,7 +193,7 @@ class Evaluator:
         return array[start_index]
     
     def visit_SlicingNode(self,node):
-        name = node.array.token_value
+        name = node.array.token_value #get array name
         array_value = self.current_env.lookup(name)
         start_index = self.evaluate(node.start_index)
         end_index = self.evaluate(node.end_index)
@@ -310,11 +326,13 @@ class Evaluator:
             except ValueError:
                 raise InvalidTypeConv(node.variable,type_)
 
+
         elif type_ == 'float':
             try:
                 value = float(user_input)
             except ValueError:
                 raise InvalidTypeConv(node.variable,type_)
+
 
         elif type_ == 'str':
             try:
@@ -322,15 +340,19 @@ class Evaluator:
             except ValueError:
                 raise InvalidTypeConv(node.variable,type_)
 
+
         elif type_ == 'bool':
             try:
                 value = bool(user_input)
             except ValueError:
                 raise InvalidTypeConv(node.variable,type_)
 
+
         self.current_env.define(node.variable,value)
         return value
-    
+
+
+
     def visit_IfNode(self,node):
         condition = self.evaluate(node.condition)
         if self.is_truthy(condition):
@@ -346,25 +368,25 @@ class Evaluator:
                     result = self.evaluate(stmt)
                 return result
         return None
-    
+
+
     def visit_WhileNode(self,node):
         result = None
         try:            
             while self.is_truthy(self.evaluate(node.condition)):
                 for stmt in node.while_body:
-                    result = self.evaluate(stmt)
-        
+                    result = self.evaluate(stmt)        
         except BreakException:
             pass
         return result
-    
+
+
     def visit_FuncDefNode(self,node):
         self.functions[node.func_name] = node
         return None
     
     def visit_FuncCallNode(self, node):
         if node.func_name not in self.functions:
-            # raise Exception(f"FUNC UNDEFINED {node.func_name}")
             raise UndefinedFunc(node.func_name)
         
         func_def = self.functions[node.func_name]
@@ -372,7 +394,7 @@ class Evaluator:
 
         #---Built-in Function Handler------------------------------
         if hasattr(func_def,'is_native'):
-            evaluated_args = [self.evaluate(arg) for arg in node.func_args]
+            evaluated_args = [self.evaluate(arg) for arg in node.func_args] # turn all the arguements into a list
 
             if len(evaluated_args) != func_def.expected_args:
                 raise InsufficientFuncArgs()
@@ -384,8 +406,10 @@ class Evaluator:
             arg_value = self.evaluate(node.func_args[i])
             func_env.define(param.token_value, arg_value)
         
+        #---Switch Environments/Scopes--------
         old_env = self.current_env
         self.current_env = func_env
+        #-----------------------------------
         
         result = None
         try:
@@ -395,22 +419,27 @@ class Evaluator:
         except ReturnException as e:
             result = e.value
 
-        
         self.current_env = old_env 
         return result
-    
+
+
     def visit_BreakNode(self,node):
         raise BreakException()
+
 
     def visit_ReturnNode(self,node):
         value = self.evaluate(node.value) if node.value else None
         raise ReturnException(value)
-    
+
+
     def visit_UseNode(self,node):
         library = node.library
 
-        if library == "math":
-            inject_math_methods(self.functions)
+        if library in self.builtInLibraries:
+            if library == "math":
+                inject_math_methods(self.functions)
+        else:
+            raise InvalidLibraryImported(library)
         
 # ########################################################################
 # #                         END OF FILE                                  #
