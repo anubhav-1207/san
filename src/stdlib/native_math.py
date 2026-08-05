@@ -1,3 +1,9 @@
+# src/stblib/native_math.py 
+#----------------------------------------------------------------------------------
+# 'math' is a library wrapper for San consisting of the pre-made functions in the 
+# 'math' library of Python. It is not loaded into the memory automatically and is 
+# only loaded when explicitly imported. 
+#----------------------------------------------------------------------------------
 from math import sin as mathsin
 from math import cos as mathcos
 from math import tan as mathtan
@@ -21,29 +27,31 @@ from math import sqrt as mathsqrt
 from math import pow as mathpow
 from math import exp as mathexp
 from math import expm1 as mathexpm1
+
 from math import degrees as mathdegrees
 from math import radians as mathradians
+
 from math import sinh as mathsinh
 from math import cosh as mathcosh
 from math import tanh as mathtanh
 from math import asinh as mathasinh
 from math import acosh as mathacosh
 from math import atanh as mathatanh
+
 from math import factorial as mathfactorial
+from math import remainder as mathremainder
+
 from math import pi as mathpi
 from math import e as mathe
 from math import inf as mathinf
 from math import nan as mathnan
+
 from math import isqrt as mathisqrt
 from math import dist as mathdist
 from math import prod as mathprod
-from math import remainder as mathremainder
+#---------------------------------------------------------------------------------
 
-
-
-
-
-
+#---Native Function Node----------------------------------------------------------
 class NativeFuncNode:
     """Represent a native math function bound for the interpreter."""
     def __init__(self,name,expected_args,method):
@@ -51,8 +59,9 @@ class NativeFuncNode:
         self.expected_args = expected_args
         self.method = method
         self.is_native = True 
-    
-def inject_math_methods(function_table):
+
+#---Load functions into memory---------------------------------------------------
+def inject_math_methods(function_table,modules=None):
     """Register native math functions in the interpreter's function table."""
     function_table["sin"] = NativeFuncNode("sin",1,sin)
     function_table["cos"] = NativeFuncNode("cos",1,cos)
@@ -276,5 +285,7 @@ def remainder(args):
 def nan(args):
     """Return a NaN value."""
     return mathnan
-
-# print(mathpi.__doc__)
+#==================================================================================
+###################################################################################
+#                               END OF FILE                                       #
+###################################################################################
