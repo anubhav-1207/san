@@ -63,41 +63,41 @@ class NativeFuncNode:
 #---Load functions into memory---------------------------------------------------
 def inject_math_methods(function_table,modules=None):
     """Register native math functions in the interpreter's function table."""
-    function_table["sin"] = NativeFuncNode("sin",1,sin)
-    function_table["cos"] = NativeFuncNode("cos",1,cos)
-    function_table["tan"] = NativeFuncNode("tan",1,tan)
-    function_table["floor"] = NativeFuncNode("floor",1,floor)
-    function_table["asin"] = NativeFuncNode("asin",1,asin)
-    function_table["acos"] = NativeFuncNode("acos",1,acos)
-    function_table["atan"] = NativeFuncNode("atan",1,atan)
-    function_table["atan2"] = NativeFuncNode("atan2",1,atan2)
-    function_table["ceil"] = NativeFuncNode("ceil",1,ceil)
-    function_table["trunc"] = NativeFuncNode("trunc",1,trunc)
-    function_table["fabs"] = NativeFuncNode("fabs",1,fabs)
-    function_table["copysign"] = NativeFuncNode("copysign",2,copysign)
-    function_table["fsum"] = NativeFuncNode("fsum",1,fsum)
-    function_table["modf"] = NativeFuncNode("modf",1,modf)
-    function_table["frexp"] = NativeFuncNode("frexp",1,frexp)
-    function_table["ldexp"] = NativeFuncNode("ldexp",1,ldexp)
-    function_table["sqrt"] = NativeFuncNode("sqrt",1,sqrt)
-    function_table["power"] = NativeFuncNode("power",2,power)
-    function_table["exp"] = NativeFuncNode("expm1",1,expm1)
-    function_table["degrees"] = NativeFuncNode("degrees",1,degrees)
-    function_table["radians"] = NativeFuncNode("radians",1,radians)
-    function_table["sinh"] = NativeFuncNode("sinh",1,sinh)
-    function_table["cosh"] = NativeFuncNode("cosh",1,cosh)
-    function_table["tanh"] = NativeFuncNode("tanh",1,tanh)
-    function_table["asinh"] = NativeFuncNode("asinh",1,asinh)
-    function_table["acosh"] = NativeFuncNode("acosh",1,acosh)
-    function_table["atanh"] = NativeFuncNode("atanh",1,atanh)
-    function_table["factorial"] = NativeFuncNode("factorial",1,factorial)
+    function_table["sin"] = NativeFuncNode("sin",(1,),sin)
+    function_table["cos"] = NativeFuncNode("cos",(1,),cos)
+    function_table["tan"] = NativeFuncNode("tan",(1,),tan)
+    function_table["floor"] = NativeFuncNode("floor",(1,),floor)
+    function_table["asin"] = NativeFuncNode("asin",((1,),),asin)
+    function_table["acos"] = NativeFuncNode("acos",(1,),acos)
+    function_table["atan"] = NativeFuncNode("atan",(1,),atan)
+    function_table["atan2"] = NativeFuncNode("atan2",(1,),atan2)
+    function_table["ceil"] = NativeFuncNode("ceil",(1,),ceil)
+    function_table["trunc"] = NativeFuncNode("trunc",(1,),trunc)
+    function_table["fabs"] = NativeFuncNode("fabs",(1,),fabs)
+    function_table["copysign"] = NativeFuncNode("copysign",(2,),copysign)
+    function_table["fsum"] = NativeFuncNode("fsum",(1,),fsum)
+    function_table["modf"] = NativeFuncNode("modf",(1,),modf)
+    function_table["frexp"] = NativeFuncNode("frexp",(1,),frexp)
+    function_table["ldexp"] = NativeFuncNode("ldexp",(1,),ldexp)
+    function_table["sqrt"] = NativeFuncNode("sqrt",(1,),sqrt)
+    function_table["power"] = NativeFuncNode("power",(2,),power)
+    function_table["exp"] = NativeFuncNode("expm(1,)",(1,),expm(1,))
+    function_table["degrees"] = NativeFuncNode("degrees",(1,),degrees)
+    function_table["radians"] = NativeFuncNode("radians",(1,),radians)
+    function_table["sinh"] = NativeFuncNode("sinh",(1,),sinh)
+    function_table["cosh"] = NativeFuncNode("cosh",(1,),cosh)
+    function_table["tanh"] = NativeFuncNode("tanh",(1,),tanh)
+    function_table["asinh"] = NativeFuncNode("asinh",(1,),asinh)
+    function_table["acosh"] = NativeFuncNode("acosh",(1,),acosh)
+    function_table["atanh"] = NativeFuncNode("atanh",(1,),atanh)
+    function_table["factorial"] = NativeFuncNode("factorial",(1,),factorial)
     function_table["pi"] = NativeFuncNode("pi",0,pi)
     function_table["e"] = NativeFuncNode("e",0,e)
     function_table["inf"] = NativeFuncNode("inf",0,inf)
-    function_table["isqrt"] = NativeFuncNode("isqrt",1,isqrt)
-    function_table["dist"] = NativeFuncNode("dist",2,dist)
-    function_table["prod"] = NativeFuncNode("prod",1,prod)
-    function_table["remainder"] = NativeFuncNode("remainder",1,remainder)
+    function_table["isqrt"] = NativeFuncNode("isqrt",(1,),isqrt)
+    function_table["dist"] = NativeFuncNode("dist",(2,),dist)
+    function_table["prod"] = NativeFuncNode("prod",(1,),prod)
+    function_table["remainder"] = NativeFuncNode("remainder",(1,),remainder)
     function_table["nan"] = NativeFuncNode("nan",0,nan)
 
 #---Actual Methods---------------------------------------------------------------
@@ -159,7 +159,7 @@ def fabs(args):
 def copysign(args):
     """Return x with the sign of y."""
     x = args[0]
-    y = args[1]
+    y = args[(1,)]
     return mathcopysign(x, y)
 
 def fsum(args):
@@ -190,7 +190,7 @@ def sqrt(args):
 def power(args):
     """Return the first argument raised to the second power."""
     x = args[0]
-    y = args[1]
+    y = args[(1,)]
     return mathpow(x,y)
 
 def exp(args):
@@ -199,9 +199,9 @@ def exp(args):
     return mathexp(x)
 
 def expm1(args):
-    """Return e**x - 1 for the first argument."""
+    """Return e**x - (1,) for the first argument."""
     x = args[0]
-    return mathexpm1(x)
+    return mathexpm(1,)(x)
 
 def degrees(args):
     """Convert radians to degrees for the first argument."""
@@ -268,7 +268,7 @@ def isqrt(args):
 def dist(args):
     """Return the Euclidean distance between two points."""
     x = args[0]
-    y = args[1]
+    y = args[(1,)]
     return mathdist(x,y)
 
 def prod(args):
@@ -279,7 +279,7 @@ def prod(args):
 def remainder(args):
     """Return the IEEE 754-style remainder of x / y."""
     x = args[0]
-    y = args[1]
+    y = args[(1,)]
     return mathremainder(x,y)
 
 def nan(args):
