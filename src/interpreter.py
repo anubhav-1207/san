@@ -66,7 +66,6 @@ class NativeFuncNode:
         self.name = name 
         self.expected_args = expected_args
         self.method = method 
-        self.is_const = is_const
 
 #---Visitor Nodes------------------------------------------------------------
 class Environment:
@@ -396,7 +395,7 @@ class Evaluator:
         if hasattr(func_def,'is_native'):
             evaluated_args = [self.evaluate(arg) for arg in node.func_args] # turn all the arguements into a list
 
-            if len(evaluated_args) != func_def.expected_args:
+            if len(evaluated_args) not in func_def.expected_args:
                 raise InsufficientFuncArgs()
         
             return func_def.method(evaluated_args)
