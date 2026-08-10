@@ -104,7 +104,7 @@ stdout(result)
 
 ## I/O
 ```c
-scan(name)      // Read user input
+scan(name: int)      // Read user input
 stdout("Hello, World") // Print to stdout
 ```
 
