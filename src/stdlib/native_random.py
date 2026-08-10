@@ -17,7 +17,7 @@ SAN programs. It exposes the following functions:
 # - randuniform()
 # --------------------------------------------------------------------------
 import random as rand
-
+#----------------------------------------------------------------------------
 class NativeRandomFunctions:
     def __init__(self,name,expected_args,method):
         """Initialize a native random function binding.
@@ -29,7 +29,7 @@ class NativeRandomFunctions:
         self.name = name 
         self.expected_args = expected_args
         self.method = method
-        self.is_native = True
+        self.is_native = True 
 
 #---Actual Methods--------------------------------------------
 def random(args):
