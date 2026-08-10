@@ -8,7 +8,7 @@ from src.stdlib.native_arrays import inject_array_methods
 from src.stdlib.native_string import inject_string_methods
 from src.stdlib.native_builtins import inject_builtin_methods
 from src.stdlib.native_math import inject_math_methods
-
+from src.stdlib.native_random import inject_random_methods
 #---Error Classes---------------------------------------------------------------
 class AccidentalReassError(Exception):
     def __init__(self,var):
@@ -120,7 +120,7 @@ class Evaluator:
         self.global_env = Environment()
         self.current_env = self.global_env
         self.functions = {}
-        self.builtInLibraries = ('math',)
+        self.builtInLibraries = ('math','random')
 
         #---Load in-built methods into the scope-----------
         inject_array_methods(self.functions)
@@ -437,6 +437,8 @@ class Evaluator:
         if library in self.builtInLibraries:
             if library == "math":
                 inject_math_methods(self.functions)
+            elif library == "random":
+                inject_random_methods(self.functions)
         else:
             raise InvalidLibraryImported(library)
         

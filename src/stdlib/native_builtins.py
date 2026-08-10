@@ -6,6 +6,7 @@
 # - setint()
 # - setstr()
 # - setfloat()
+# - getrange()
 
 # The built-in methods are automatically loaded into the memory and importing this will
 # raise error
