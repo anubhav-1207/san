@@ -10,9 +10,9 @@
 
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-![Lines of Code](https://img.shields.io/badge/Lines%20of%20Code-~1,921-brightgreen)
+![Lines of Code](https://img.shields.io/badge/Lines%20of%20Code-~2,296-red)
 
-![Status](https://img.shields.io/badge/Status-Complete-success)
+![Status](https://img.shields.io/badge/Status-In_Development-yellow)
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
 
@@ -34,9 +34,9 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Functions**: First-class function definitions with parameters, closures, and `return` values
 - **I/O**: `stdout()` for printing, `scan(variable)` for user input
 - **Scoping**: Proper lexical scoping with environment chains
-- **Standard Library**: Consisting of various methods for `strings` and `arrays`
+- **Standard Library**: Consisting of various modules
 
-### [Try out San in your browser](https://san-qftd.onrender.com)
+### [Try out San in your browser - might be broken, use only for small scripts.](https://san-qftd.onrender.com)
 
 
 
@@ -104,7 +104,7 @@ stdout(result)
 
 ## I/O
 ```c
-scan(name)      // Read user input
+scan(name: int)      // Read user input
 stdout("Hello, World") // Print to stdout
 ```
 
@@ -150,6 +150,14 @@ array[3]
 array[::-1]
 ```
 
+## Libraries
+```c
+use math
+stdout(sin(1))
+stdout(cos(2))
+stdout("Many more functions!!!");
+```
+
 
 
 # Examples 
@@ -180,8 +188,8 @@ San is a programming language that has a great potential to be someone's first l
 
 # Acknowledgements
 A huge thanks to:
-- People of r/compilers in reddit
-- To LLMs (ChatGPT, Gemini, Claude), though I Didnt vibe-coded it, but I learnt it with the help of AI because most of the tutorials were in Java or C, which I didn't knew.
+- People of `r/compilers` in reddit
+- To LLMs (ChatGPT, Gemini, Claude), though I didn't vibe-code it, but I learnt it with the help of AI because most of the tutorials were in Java or C, which I didn't knew.
 - To myself, for motivation
-- My friend Aditya Vishal for resources, though he is not in programming field, but he provided me with much needed basic stuff when I could not buy them.
+- My friend Aditya Vishal for resources, though he is not in programming field, but he provided me with much needed basic stuff when I did not have them.
 - Ofcourse, towards coffee. 
