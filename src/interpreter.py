@@ -444,6 +444,18 @@ class Evaluator:
                 inject_time_methods(self.functions)
         else:
             raise InvalidLibraryImported(library)
+    
+    def visit_ForNode(self,node):
+        result = None
+        variable = node.variable.var_name_token
+        iterable = self.evaluate(node.iterable)
+        statements = node.statements
+        
+        for variable in iterable:
+            for stmt in statements:
+                print(stmt)
+                result = self.evaluate(stmt)
+        return result
         
 # ########################################################################
 # #                         END OF FILE                                  #

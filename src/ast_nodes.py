@@ -214,6 +214,15 @@ class UseNode(AST):
     
     def __repr__(self):
         return f"(Use {self.library})"
+
+class ForNode(AST):
+    def __init__(self,variable,iterable,statements):
+        self.variable = variable
+        self.iterable = iterable
+        self.statements = statements
+    
+    def __repr__(self):
+        return f"(FOR {self.variable} in {self.iterable} :: {self.statements})"
 #---------------------------------------------------------------------
 
 #####################################################################

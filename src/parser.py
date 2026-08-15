@@ -347,12 +347,30 @@ class Parser:
             self.advance()
             self.expect([TT_RPAREN])
             return ScanNode(variable,type_)
-        #---Use-----------------------------------------------------------------------
+        #---Use-------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'use':
             self.advance()
             library = self.current_token.token_value
             self.advance()
             return UseNode(library)
+        
+        #---For---------------------------------------------------------------
+        elif self.current_token and self.current_token.token_value == 'for':
+            self.advance()
+            variable = self.parse_logical_or()
+            self.expect([TT_KEYWORD])
+            iterable = self.parse_logical_or()
+            statements = []
+            self.advance()
+            while self.current_token and self.current_token!=TT_RBRACE:
+                statements.append(self.current_token)
+                self.advance()
+            self.expect([TT_RBRACE])
+            
+            
+            
+            # print(statements)
+            return ForNode(variable,iterable,statements)
 
         else:
             expr = self.parse_logical_or()
