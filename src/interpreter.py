@@ -33,7 +33,7 @@ class UndefinedFunc(Exception):
 
 class InvalidTypeConv(Exception):
     def __init__(self,var,type_):
-        super().__init__(f"class source.fatal:: variable '{var.token_value}' is not of the required type '{type_}', cannot perform implicit type conversion - type mismatch,\n\t\t---> interpreter exited with error[#INTRPTR006]")
+        super().__init__(f"class source.fatal:: variable '{var}' is not of the required type '{type_}', cannot perform implicit type conversion - type mismatch,\n\t\t---> interpreter exited with error[#INTRPTR006]")
 
 class MalformedTypeOperation(Exception):
     def __init__(self):
@@ -45,7 +45,7 @@ class UnrecognisedBinaryOp(Exception):
 
 class InsufficientFuncArgs(Exception):
     def __init__(self):
-        super().__init__(f"class source.fatal:: in-built function did not recieved specified arguements,\n\t\t---> interpreter exited with error[#INTRPTR007]")
+        super().__init__(f"class source.fatal:: in-built function did not received specified arguments,\n\t\t---> interpreter exited with error[#INTRPTR007]")
 
 class InvalidLibraryImported(Exception):
     def __init__(self,library):
@@ -96,7 +96,7 @@ class Environment:
     #---Edits the value of a var in the namespace-----------------------------------------
     def reassign_var(self,name,value):
         """
-        Reassigns the variable if not a consant.
+        Reassigns the variable if not a constant.
         """
         if name in self.vars:
             val, is_const = self.vars[name]
@@ -394,7 +394,7 @@ class Evaluator:
 
         #---Built-in Function Handler------------------------------
         if hasattr(func_def,'is_native'):
-            evaluated_args = [self.evaluate(arg) for arg in node.func_args] # turn all the arguements into a list
+            evaluated_args = [self.evaluate(arg) for arg in node.func_args] # turn all the arguments into a list
 
             if len(evaluated_args) not in func_def.expected_args:
                 raise InsufficientFuncArgs()

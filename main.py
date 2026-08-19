@@ -80,7 +80,7 @@ def run_file(filename,pipeline_flags=False):
             evaluator = Evaluator()
             evaluator.evaluate(ast)
 
-    except (InvalidTokenError, UnterminatedStringLiteral, InvalidIdentifier, InvalidFloatLiteral, UnintialisedStringLiteral,UnexpectedTokenError,ControlFLowError, NullFuncBody,AccidentalReassError,UndefinedVariable,ConstantMutation,UndefinedFunc,ZeroDivisionError,ConstantArrayError,InsufficientFuncArgs,InvalidLibraryImported) as e:
+    except (InvalidTokenError, UnterminatedStringLiteral, InvalidIdentifier, InvalidFloatLiteral, UnintialisedStringLiteral,UnexpectedTokenError,ControlFLowError, NullFuncBody,AccidentalReassError,UndefinedVariable,ConstantMutation,UndefinedFunc,ZeroDivisionError,ConstantArrayError,InsufficientFuncArgs,InvalidLibraryImported,InvalidTypeConv) as e:
         print(Fore.RED+f"{e.__class__.__name__}: {e}")
 
 #---Running The File------------------------------------------------------------------
