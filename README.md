@@ -32,9 +32,9 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Slicing**: Access elements within an origin and destination indices
 - **Control Flow**: `if/else` conditionals, `while` and `for` loops, `break` statements
 - **Functions**: First-class function definitions with parameters, closures, and `return` values
-- **I/O**: `stdout()` for printing, `scan(variable)` for user input
+- **I/O**: `stdout()` for printing, `scan(variable: type)` for user input
 - **Scoping**: Proper lexical scoping with environment chains
-- **Standard Library**: Consisting of various modules
+- **Standard Library**: Consisting of 50+ highly optimized in-built functions
 
 ### [Try out San in your browser - might be broken, use only for small scripts.](https://san-qftd.onrender.com)
 
