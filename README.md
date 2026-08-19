@@ -30,7 +30,7 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Arrays**: Declare arrays
 - **Indexing**: Access elements by index in a `string` or an `array`
 - **Slicing**: Access elements within an origin and destination indices
-- **Control Flow**: `if/else` conditionals, `while` loops, `break` statements
+- **Control Flow**: `if/else` conditionals, `while` and `for` loops, `break` statements
 - **Functions**: First-class function definitions with parameters, closures, and `return` values
 - **I/O**: `stdout()` for printing, `scan(variable)` for user input
 - **Scoping**: Proper lexical scoping with environment chains
@@ -89,6 +89,10 @@ while (i < 10) {
     break
   }
   flux i = i + 1
+}
+
+for i in iterrange(1,100){
+  stdout(i)
 }
 ```
 
