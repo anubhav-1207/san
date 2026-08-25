@@ -357,16 +357,11 @@ class Parser:
         #---For---------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'for':
             self.advance()
+            
             variable = self.parse_logical_or()
             self.expect([TT_KEYWORD])
             iterable = self.parse_logical_or()
-            statements = []
-            self.advance()
-            while self.current_token and self.current_token!=TT_RBRACE:
-                statements.append(self.current_token)
-                self.advance()
-            self.expect([TT_RBRACE])
-            
+            statements = self.parse_blocks()            
             
             
             # print(statements)
