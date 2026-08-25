@@ -66,17 +66,16 @@ def getrange(args):
             result.append(i)
         return result
     
-
-    
-    
-
-
+def tup(args):
+    array = args[0]
+    return tuple(array)
 #----------------------------------------------------------
 def inject_builtin_methods(function_table):
     """Loads the functions into memory."""
     function_table["typeof"] = NativeBuiltInFunctions("typeof",(1,),typeof)
     function_table["setint"] = NativeBuiltInFunctions("setint",(1,),setint)
     function_table["setstr"] = NativeBuiltInFunctions("setstr",(1,),setstr)
+    function_table["tup"] = NativeBuiltInFunctions("tup",(1,),tup)
     function_table["setfloat"] = NativeBuiltInFunctions("setfloat",(1,),setfloat)
     function_table["getrange"] = NativeBuiltInFunctions("getrange",(1,2,3),getrange)
 

@@ -336,7 +336,7 @@ class Lexer:
             elif char == '-':self.add(TT_MINUS,self.line,'-');self.advance()
             elif char == '.':self.add(TT_DOT,self.line,'.');self.advance()
             elif char == ',':self.add(TT_COMMA,self.line,',');self.advance()
-            elif char == ';':self.advance()
+            elif char in (';','$','#'):self.advance()
             elif char == ':':self.add(TT_COLON,self.line,':');self.advance()
            
            #---Strings----------------------
