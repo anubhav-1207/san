@@ -27,7 +27,8 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Variables**: Declare mutable (`dec`) and immutable (`const`) variables
 - **Data Types**: Integers, floats, strings, booleans, null
 - **Operators**: Arithmetic (`+`, `-`, `*`, `/`, `**`), comparison (`>`, `<`, `==`, `!=`, `>=`, `<=`), logical (`&&`, `||`, `!`)
-- **Arrays**: Declare arrays
+- **Arrays**: Declare, index, and slice arrays and perform operations
+- **Tuple**: Declare, index, slice and perform other operations
 - **Indexing**: Access elements by index in a `string` or an `array`
 - **Slicing**: Access elements within an origin and destination indices
 - **Control Flow**: `if/else` conditionals, `while` and `for` loops, `break` statements
@@ -125,6 +126,13 @@ dec x = [1,2,3,4] //declare a mutable array
 name = x[0] //assign array element to a variable using indexing 
 stdout(name)
 stdout(y[0]) //direct printing of the element of array
+```
+
+## Tuples
+```c
+dec x = tup([1,2,3,4,5,6,7,8])
+stdout(x[3])
+stdout(len(x))
 ```
 
 ## Statement Termination 
