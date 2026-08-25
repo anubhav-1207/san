@@ -454,6 +454,7 @@ class Evaluator:
         for variable in iterable:
             for stmt in statements:
                 print(stmt)
+                self.current_env.reassign_var(variable,result)
                 result = self.evaluate(stmt)
         return result
     #---------------------------------------------------------------------
