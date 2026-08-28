@@ -447,14 +447,14 @@ class Evaluator:
     
     def visit_ForNode(self,node):
         result = None
-        variable = node.variable.var_name_token
+        variable = node.variable.var_name_token.token_value
         iterable = self.evaluate(node.iterable)
         statements = node.statements
         
-        for variable in iterable:
+        self.current_env.define(variable,None)
+        for i in iterable:
             for stmt in statements:
-                print(stmt)
-                self.current_env.reassign_var(variable,result)
+                self.current_env.reassign_var(variable,i)
                 result = self.evaluate(stmt)
         return result
     #---------------------------------------------------------------------
