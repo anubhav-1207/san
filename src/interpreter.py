@@ -10,6 +10,7 @@ from src.stdlib.native_builtins import inject_builtin_methods
 from src.stdlib.native_math import inject_math_methods
 from src.stdlib.native_random import inject_random_methods
 from src.stdlib.native_time import inject_time_methods
+
 #---Error Classes---------------------------------------------------------------
 class AccidentalReassError(Exception):
     def __init__(self,var):
@@ -23,9 +24,9 @@ class ConstantMutation(Exception):
     def __init__(self,var):
         super().__init__(f"class source.fatal:: environmental constant '{var.token_value}' is a constant,even explicit reassignment not allowed,\n\t\t---> interpreter exited with error[#INTRPTR003]")
 
-class ZeroDivisionError(Exception):
-    def __init__(self,right,left):
-        super().__init__(f"class source.fatal:: cannot divide by zero, mathematically undefined,\n\t\t---> undefined operation '{right}/{left}' interpreter exited with error[#INTRPTR004]")
+class ZeroDivisionError(Exception): #done
+    def __init__(self,right,left,line,col):
+        super().__init__(f"class source.fatal:: cannot divide by zero, mathematically undefined,\n\t\t---> undefined operation '{right}/{left}' interpreter exited with error[#INTRPTR004] line:col {line}:{col}")
 
 class UndefinedFunc(Exception):
     def __init__(self,var):
@@ -212,7 +213,7 @@ class Evaluator:
     
     def visit_BinaryOpNode(self,node):
         left = self.evaluate(node.left)
-        operator = node.op
+        operator = node.op.token_value
         right = self.evaluate(node.right)
 
         if operator == '+':
@@ -237,7 +238,7 @@ class Evaluator:
             if right != 0:
                 return left // right
             else:
-                raise ZeroDivisionError(right,left)
+                raise ZeroDivisionError(right,left,node.op.line,node.op.col)
         elif operator == '**':
             try:
                 return left ** right

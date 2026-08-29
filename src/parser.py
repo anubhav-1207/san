@@ -214,7 +214,7 @@ class Parser:
         """Parses terminals values."""
         left = self.parse_power()
         while self.current_token and self.match([TT_STAR,TT_SLASH]):
-            op = self.current_token.token_value 
+            op = self.current_token
             self.advance()
             right = self.parse_power()
             right = right
