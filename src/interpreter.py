@@ -14,21 +14,21 @@ from src.stdlib.native_time import inject_time_methods
 #---Error Classes---------------------------------------------------------------
 class AccidentalReassError(Exception):
     def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental variable '{var.token_value}' already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001]")
+        super().__init__(f"class source.fatal:: environmental variable '{var}' already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001]")
 
 class UndefinedVariable(Exception):
-    def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental variable '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002]")
+    def __init__(self,var,line,col):
+        super().__init__(f"class source.fatal:: environmental variable '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002] line:col {line}:{col}")
 
-class ConstantMutation(Exception):
-    def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental constant '{var.token_value}' is a constant,even explicit reassignment not allowed,\n\t\t---> interpreter exited with error[#INTRPTR003]")
+class ConstantMutation(Exception): #done
+    def __init__(self,var,line,col):
+        super().__init__(f"class source.fatal:: environmental constant '{var}' is a constant,even explicit reassignment not allowed,\n\t\t---> interpreter exited with error[#INTRPTR003] line:col {line}:{col}")
 
 class ZeroDivisionError(Exception): #done
     def __init__(self,right,left,line,col):
         super().__init__(f"class source.fatal:: cannot divide by zero, mathematically undefined,\n\t\t---> undefined operation '{right}/{left}' interpreter exited with error[#INTRPTR004] line:col {line}:{col}")
 
-class UndefinedFunc(Exception):
+class UndefinedFunc(Exception): #done
     def __init__(self,var):
         super().__init__(f"class source.recursive:: function '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR005]")
 
@@ -87,32 +87,34 @@ class Environment:
     #---Finds the value of the variable in the given environment/scope-------------------
     def lookup(self,name):
         """Searches for a variable in the global and parent scope. """
-        if name in self.vars:
-            return self.vars[name][0]
+        name_value = name.token_value
+        if name_value in self.vars:
+            return self.vars[name_value][0]
         if self.parent:
-            return self.parent.lookup(name)
+            return self.parent.lookup(name_value)
         else:
-            raise UndefinedVariable(name)
+            raise UndefinedVariable(name,name.line,name.col)
     
     #---Edits the value of a var in the namespace-----------------------------------------
     def reassign_var(self,name,value):
         """
         Reassigns the variable if not a constant.
         """
-        if name in self.vars:
-            val, is_const = self.vars[name]
+        name_value = name.token_value
+        if name_value in self.vars:
+            val, is_const = self.vars[name_value]
             if is_const:
-                raise ConstantMutation(name)
+                raise ConstantMutation(name_value,name.line,name.col)
             else:
-                self.vars[name] = (value,is_const)
+                self.vars[name_value] = (value,is_const)
                 return 
             
         elif self.parent:
-            self.parent.reassign_var(name,value)
+            self.parent.reassign_var(name_value,value)
             return 
         
         else:
-            raise UndefinedVariable(name)
+            raise UndefinedVariable(name_value)
 #----------------------------------------------------------------------------------------------
 
 #---Evaluator Class---------------------------------------------------------------------------
@@ -188,13 +190,15 @@ class Evaluator:
         return elements
     
     def visit_IndexingNode(self,node):
-        name = node.array.token_value  # get variable name
+        name = node.array
+        name_value = node.array.token_value  # get variable name
         array = self.current_env.lookup(name)
         start_index = self.evaluate(node.start_index)
         return array[start_index]
     
     def visit_SlicingNode(self,node):
-        name = node.array.token_value #get array name
+        name = node.array
+        name_value = node.array.token_value #get array name
         array_value = self.current_env.lookup(name)
         start_index = self.evaluate(node.start_index)
         end_index = self.evaluate(node.end_index)
@@ -297,7 +301,7 @@ class Evaluator:
             raise UnrecognisedBinaryOp(operator)
     
     def visit_VarAccessNode(self,node):
-        return self.current_env.lookup(node.var_name_token.token_value)
+        return self.current_env.lookup(node.var_name_token)
     
     def visit_VarAssignNode(self,node):
         name = node.var_name_token.token_value
@@ -307,7 +311,7 @@ class Evaluator:
         return value
     
     def visit_VarReassignNode(self,node):
-        name = node.var_name_token.token_value
+        name = node.var_name_token
         value = self.evaluate(node.value_node)
         self.current_env.reassign_var(name,value)
         return value
