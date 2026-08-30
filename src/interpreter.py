@@ -18,7 +18,7 @@ class AccidentalReassError(Exception): #done
 
 class UndefinedVariable(Exception): #done
     def __init__(self,var,line,col):
-        super().__init__(f"class source.fatal:: environmental variable '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002] line:col {line}:{col}")
+        super().__init__(f"class source.fatal:: environmental variable '{var.token_value}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002] line:col {line}:{col}")
 
 class ConstantMutation(Exception): #done
     def __init__(self,var,line,col):
@@ -37,20 +37,20 @@ class InvalidTypeConv(Exception): #done
         super().__init__(f"class source.fatal:: variable '{var}' is not of the required type '{type_}', cannot perform implicit type conversion - type mismatch,\n\t\t---> interpreter exited with error[#INTRPTR006] line:col {line}:{col}")
 
 class MalformedTypeOperation(Exception): #done
-    def __init__(self):
-        super().__init__(f"class source.fatal:: operation is not of the required type, cannot perform operation - supported type operations:\nint + float\nint - float\nint * float\nint / float\nint // float\nint % float\\nint ** float \nbool + int\nbool + float\nstr * int,\n\t\t---> interpreter exited with error[#INTRPTR006]")
+    def __init__(self,line,col):
+        super().__init__(f"class source.fatal:: operation is not of the required type, cannot perform operation - supported type operations:\nint + float\nint - float\nint * float\nint / float\nint // float\nint % float\\nint ** float \nbool + int\nbool + float\nstr * int,\n\t\t---> interpreter exited with error[#INTRPTR006] line:col {line}:{col}")
 
 class UnrecognisedBinaryOp(Exception): #done
     def __init__(self,op,line,col):
         super().__init__(f"class source.non-fatal:: unrecognised binary operator encountered - this error was not even possible to occur, if it did, congratulations, you went horribly wrong somewhere. You're on your own now - '{op}' ,\n\t\t---> interpreter exited with error[#INTRPTR006] line:col {line}:{col}")
 
-class InsufficientFuncArgs(Exception): 
-    def __init__(self):
-        super().__init__(f"class source.fatal:: in-built function did not received specified arguments,\n\t\t---> interpreter exited with error[#INTRPTR007]")
+class InsufficientFuncArgs(Exception): #done
+    def __init__(self,len_of_params,line,col):
+        super().__init__(f"class source.fatal:: in-built function did not received number of specified arguments ({len_of_params}),\n\t\t---> interpreter exited with error[#INTRPTR007] line:col {line}:{col}")
 
-class InvalidLibraryImported(Exception):
-    def __init__(self,library):
-        super().__init__(f"class source.fatal :: no in-built library found named {library},\n\t\t---> interpreter exited with error[#INTRPTR007]")
+class InvalidLibraryImported(Exception): #done
+    def __init__(self,library,line,col):
+        super().__init__(f"class source.fatal :: no in-built library found named '{library}',\n\t\t---> interpreter exited with error[#INTRPTR007] line:col {line}:{col}")
 
 class BreakException(Exception):
     pass
@@ -58,7 +58,7 @@ class BreakException(Exception):
 class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
-#-----------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------
 
 
 #---STDLIB built-in Functions--------------------------------------------------------------------------
@@ -88,7 +88,7 @@ class Environment:
     #---Finds the value of the variable in the given environment/scope-------------------
     def lookup(self,name):
         """Searches for a variable in the global and parent scope. """
-        name_value = name.token_value
+        name_value = name
         if name_value in self.vars:
             return self.vars[name_value][0]
         if self.parent:
@@ -220,7 +220,7 @@ class Evaluator:
         left = self.evaluate(node.left)
         operator = node.op.token_value
         right = self.evaluate(node.right)
-        print(type(operator))
+        # print(type(operator))
 
         if operator == '+':
             try:
@@ -389,28 +389,31 @@ class Evaluator:
 
 
     def visit_FuncDefNode(self,node):
-        self.functions[node.func_name] = node
+        self.functions[node.func_name.token_value] = node
         return None
     
     def visit_FuncCallNode(self, node):
-        if node.func_name not in self.functions:
+        if node.func_name.token_value not in self.functions:
             raise UndefinedFunc(node.func_name.token_value,node.func_name.line,node.func_name.col)
         
-        func_def = self.functions[node.func_name]
+        func_def = self.functions[node.func_name.token_value]
         func_env = Environment(parent=self.current_env)
 
         #---Built-in Function Handler------------------------------
         if hasattr(func_def,'is_native'):
-            evaluated_args = [self.evaluate(arg) for arg in node.func_args] # turn all the arguments into a list
-
+            evaluated_args = [self.evaluate(arg) for arg in node.func_args] #turn all the arguments into a list
             if len(evaluated_args) not in func_def.expected_args:
-                raise InsufficientFuncArgs()
+                raise InsufficientFuncArgs(func_def.expected_args,"Unavailable","Unavailable")
         
             return func_def.method(evaluated_args)
 
         #---User Defined Functions----------------------------------
+        # print(type(func_def.func_name))
         for i, param in enumerate(func_def.func_params):
-            arg_value = self.evaluate(node.func_args[i])
+            try:
+                arg_value = self.evaluate(node.func_args[i])
+            except Exception as e:
+                raise InsufficientFuncArgs(len(func_def.func_params),node.func_name.line,node.func_name.col)
             func_env.define(param.token_value, arg_value)
         
         #---Switch Environments/Scopes--------
@@ -440,17 +443,17 @@ class Evaluator:
 
 
     def visit_UseNode(self,node):
-        library = node.library
+        library_name = node.library.token_value
 
-        if library in self.builtInLibraries:
-            if library == "math":
+        if library_name in self.builtInLibraries:
+            if library_name == "math":
                 inject_math_methods(self.functions)
-            elif library == "random":
+            elif library_name == "random":
                 inject_random_methods(self.functions)
-            elif library == "time":
+            elif library_name == "time":
                 inject_time_methods(self.functions)
         else:
-            raise InvalidLibraryImported(library)
+            raise InvalidLibraryImported(library_name,node.library.line,node.library.col)
     
     def visit_ForNode(self,node):
         result = None

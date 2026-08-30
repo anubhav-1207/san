@@ -300,7 +300,7 @@ class Parser:
         #---Functions-------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'func':
             self.expect([self.current_token.type_])
-            func_name = self.current_token.token_value
+            func_name = self.current_token
             self.expect([TT_IDENT])
             self.expect([TT_LPAREN])
             params = []
@@ -350,7 +350,7 @@ class Parser:
         #---Use-------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'use':
             self.advance()
-            library = self.current_token.token_value
+            library = self.current_token
             self.advance()
             return UseNode(library)
         
