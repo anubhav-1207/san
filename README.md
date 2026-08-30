@@ -31,7 +31,7 @@ San is a dynamically and strongly typed, statically-scoped programming language 
 - **Tuple**: Declare, index, slice and perform other operations
 - **Indexing**: Access elements by index in a `string` or an `array`
 - **Slicing**: Access elements within an origin and destination indices
-- **Control Flow**: `if/else` conditionals, `while` and `for` loops, `break` statements
+- **Control Flow**: `if/elif/else` conditionals, `while` and `for` loops, `break` statements
 - **Functions**: First-class function definitions with parameters, closures, and `return` values
 - **I/O**: `stdout()` for printing, `scan(variable: type)` for user input
 - **Scoping**: Proper lexical scoping with environment chains
