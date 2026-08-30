@@ -79,20 +79,18 @@ class Environment:
     #---Enters a value in the namespace-----------------
     def define(self,name,value,is_const=False):
         """Adds the variable and its value to namespace."""
-        name_value = name
-        if name_value in self.vars:
-            raise AccidentalReassError(name_value,name.line,name.col)
+        if name.token_value in self.vars:
+            raise AccidentalReassError(name.token_value,name.line,name.col)
         else:
-            self.vars[name_value] = (value, is_const)
+            self.vars[name.token_value] = (value, is_const)
     
     #---Finds the value of the variable in the given environment/scope-------------------
     def lookup(self,name):
         """Searches for a variable in the global and parent scope. """
-        name_value = name
-        if name_value in self.vars:
-            return self.vars[name_value][0]
+        if name.token_value in self.vars:
+            return self.vars[name.token_value][0]
         if self.parent:
-            return self.parent.lookup(name_value)
+            return self.parent.lookup(name.token_value)
         else:
             raise UndefinedVariable(name,name.line,name.col)
     
@@ -220,7 +218,6 @@ class Evaluator:
         left = self.evaluate(node.left)
         operator = node.op.token_value
         right = self.evaluate(node.right)
-        # print(type(operator))
 
         if operator == '+':
             try:
@@ -333,13 +330,11 @@ class Evaluator:
             except ValueError:
                 raise InvalidTypeConv(node.variable,type_,node.variable.line,node.variable.col)
 
-
         elif type_ == 'float':
             try:
                 value = float(user_input)
             except ValueError:
                 raise InvalidTypeConv(node.variable,type_)
-
 
         elif type_ == 'str':
             try:
@@ -347,13 +342,11 @@ class Evaluator:
             except ValueError:
                 raise InvalidTypeConv(node.variable,type_)
 
-
         elif type_ == 'bool':
             try:
                 value = bool(user_input)
             except ValueError:
                 raise InvalidTypeConv(node.variable,type_)
-
 
         self.current_env.define(node.variable,value)
         return value
@@ -413,13 +406,12 @@ class Evaluator:
             return func_def.method(evaluated_args)
 
         #---User Defined Functions----------------------------------
-        # print(type(func_def.func_name))
         for i, param in enumerate(func_def.func_params):
             try:
                 arg_value = self.evaluate(node.func_args[i])
             except Exception as e:
                 raise InsufficientFuncArgs(len(func_def.func_params),node.func_name.line,node.func_name.col)
-            func_env.define(param.token_value, arg_value)
+            func_env.define(param, arg_value)
         
         #---Switch Environments/Scopes--------
         old_env = self.current_env
@@ -462,7 +454,7 @@ class Evaluator:
     
     def visit_ForNode(self,node):
         result = None
-        variable = node.variable.var_name_token.token_value
+        variable = node.variable.var_name_token
         iterable = self.evaluate(node.iterable)
         statements = node.statements
         
