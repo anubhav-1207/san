@@ -18,7 +18,7 @@ class AST:
         self.col = col
 
 #---Number Node--------------------------------------------------------
-class NumberNode(AST):
+class NumberNode(AST): ##################
     def __init__(self,number):
         self.number = number.token_value
     def __repr__(self):
@@ -68,9 +68,9 @@ class ArrayLiteralNode(AST):
     def __repr__(self):
         return f"(Array {self.elements})"
 
-class ArrayAssignNode(AST):
+class ArrayAssignNode(AST): ############
     def __init__(self,name,elements):
-        self.name = name.token_value 
+        self.name = name
         self.elements = elements 
     def __repr__(self):
         return f"(ArrayAssign {self.name}={self.elements}"

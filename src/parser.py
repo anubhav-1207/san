@@ -67,7 +67,7 @@ class Parser:
         """Parses '||' operator."""
         left = self.parse_logical_and()
         while self.current_token and self.match([TT_OR]):
-            op = self.current_token.token_value
+            op = self.current_token
             self.advance()
             right = self.parse_logical_and()
             left = BinaryOpNode(left, op, right)
@@ -78,7 +78,7 @@ class Parser:
         """Parses the '&&' operator."""
         left = self.parse_comp_expr()
         while self.current_token and self.match([TT_AND]):
-            op = self.current_token.token_value
+            op = self.current_token
             self.advance()
             right = self.parse_comp_expr()
             left = BinaryOpNode(left, op, right)
@@ -148,7 +148,7 @@ class Parser:
                         args.append(self.parse_logical_or())
                 
                 self.expect([TT_RPAREN]) 
-                return FuncCallNode(variable.token_value, args)
+                return FuncCallNode(variable, args)
 
             #---Indexing & Slicing Checks-----------------------------------------
             elif self.current_token and self.current_token.type_ == TT_LBRACKET:
@@ -203,7 +203,7 @@ class Parser:
         """Parser exponents."""
         left = self.parse_factor()
         if self.current_token and self.match([TT_STARSTAR]):
-            op = self.current_token.token_value
+            op = self.current_token
             self.advance()
             right = self.parse_power()
             left = BinaryOpNode(left,op,right)
@@ -214,7 +214,7 @@ class Parser:
         """Parses terminals values."""
         left = self.parse_power()
         while self.current_token and self.match([TT_STAR,TT_SLASH]):
-            op = self.current_token.token_value 
+            op = self.current_token
             self.advance()
             right = self.parse_power()
             right = right
@@ -226,7 +226,7 @@ class Parser:
         """Parses expressions."""
         left = self.parse_term()
         while self.current_token and self.match([TT_PLUS,TT_MINUS]):
-            op = self.current_token.token_value
+            op = self.current_token
             self.advance()
             right = self.parse_term()
             left = BinaryOpNode(left,op,right)
@@ -237,7 +237,7 @@ class Parser:
         """Parses comparison expressions."""
         left = self.parse_expr()
         while self.current_token and self.match([TT_GT,TT_GTE,TT_LT,TT_LTE,TT_EQEQ,TT_BANGEQ]):
-            op = self.current_token.token_value
+            op = self.current_token
             self.advance()
             right = self.parse_expr()
             left = BinaryOpNode(left,op,right)
@@ -300,7 +300,7 @@ class Parser:
         #---Functions-------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'func':
             self.expect([self.current_token.type_])
-            func_name = self.current_token.token_value
+            func_name = self.current_token
             self.expect([TT_IDENT])
             self.expect([TT_LPAREN])
             params = []
@@ -340,7 +340,7 @@ class Parser:
         elif self.current_token and self.current_token.token_value == 'scan':
             self.expect([self.current_token.type_])
             self.expect(TT_LPAREN)
-            variable = self.current_token.token_value
+            variable = self.current_token
             self.advance()
             self.expect([TT_COLON])
             type_ = self.current_token.token_value
@@ -350,7 +350,7 @@ class Parser:
         #---Use-------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'use':
             self.advance()
-            library = self.current_token.token_value
+            library = self.current_token
             self.advance()
             return UseNode(library)
         

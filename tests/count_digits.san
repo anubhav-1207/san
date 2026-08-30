@@ -3,6 +3,5 @@ dec count = 0
 while (n > 0) {
   flux count = count + 1
   flux n = n / 10
-  stdout(n)
 }
 stdout(count)
