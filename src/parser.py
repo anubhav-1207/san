@@ -274,17 +274,25 @@ class Parser:
         elif self.current_token and self.current_token.token_value == 'if':
             self.advance()
             self.expect([TT_LPAREN])
-            condition = self.parse_logical_or()
+            if_condition = self.parse_logical_or()
             self.expect([TT_RPAREN])
             if_body = self.parse_blocks()
             if not if_body:
                 raise ControlFLowError("if",self.current_token.line,self.current_token.col)
+            
+            elif_body = None
+            if self.current_token and self.current_token.token_value == 'elif':
+                self.advance()
+                self.expect(TT_LPAREN)
+                elif_condition = self.parse_logical_or()
+                self.expect([TT_RPAREN])
+                elif_body = self.parse_blocks()
 
             else_body = None 
             if self.current_token and self.current_token.token_value == 'else':
                 self.advance()
                 else_body = self.parse_blocks()
-            return IfNode(condition,if_body,else_body)
+            return IfNode(if_condition,if_body,elif_condition,elif_body,else_body)
 
         #---WHILE Iterator-----------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'while':
