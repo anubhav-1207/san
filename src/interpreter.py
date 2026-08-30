@@ -12,11 +12,11 @@ from src.stdlib.native_random import inject_random_methods
 from src.stdlib.native_time import inject_time_methods
 
 #---Error Classes---------------------------------------------------------------
-class AccidentalReassError(Exception):
-    def __init__(self,var):
-        super().__init__(f"class source.fatal:: environmental variable '{var}' already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001]")
+class AccidentalReassError(Exception): #done
+    def __init__(self,var,line,col):
+        super().__init__(f"class source.fatal:: environmental variable '{var}' already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001] line:col {line}:{col}")
 
-class UndefinedVariable(Exception):
+class UndefinedVariable(Exception): #done
     def __init__(self,var,line,col):
         super().__init__(f"class source.fatal:: environmental variable '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002] line:col {line}:{col}")
 
@@ -29,22 +29,22 @@ class ZeroDivisionError(Exception): #done
         super().__init__(f"class source.fatal:: cannot divide by zero, mathematically undefined,\n\t\t---> undefined operation '{right}/{left}' interpreter exited with error[#INTRPTR004] line:col {line}:{col}")
 
 class UndefinedFunc(Exception): #done
-    def __init__(self,var):
-        super().__init__(f"class source.recursive:: function '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR005]")
+    def __init__(self,var,line,col):
+        super().__init__(f"class source.recursive:: function '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR005] line:col {line}:{col}")
 
-class InvalidTypeConv(Exception):
-    def __init__(self,var,type_):
-        super().__init__(f"class source.fatal:: variable '{var}' is not of the required type '{type_}', cannot perform implicit type conversion - type mismatch,\n\t\t---> interpreter exited with error[#INTRPTR006]")
+class InvalidTypeConv(Exception): #done
+    def __init__(self,var,type_,line,col):
+        super().__init__(f"class source.fatal:: variable '{var}' is not of the required type '{type_}', cannot perform implicit type conversion - type mismatch,\n\t\t---> interpreter exited with error[#INTRPTR006] line:col {line}:{col}")
 
-class MalformedTypeOperation(Exception):
+class MalformedTypeOperation(Exception): #done
     def __init__(self):
         super().__init__(f"class source.fatal:: operation is not of the required type, cannot perform operation - supported type operations:\nint + float\nint - float\nint * float\nint / float\nint // float\nint % float\\nint ** float \nbool + int\nbool + float\nstr * int,\n\t\t---> interpreter exited with error[#INTRPTR006]")
 
-class UnrecognisedBinaryOp(Exception):
-    def __init__(self,op):
-        super().__init__(f"class source.non-fatal:: unrecognised binary operator encountered - this error was not even possible to occur, if it did, congratulations, you went horribly wrong somewhere. You're on your own now - '{op}' ,\n\t\t---> interpreter exited with error[#INTRPTR006]")
+class UnrecognisedBinaryOp(Exception): #done
+    def __init__(self,op,line,col):
+        super().__init__(f"class source.non-fatal:: unrecognised binary operator encountered - this error was not even possible to occur, if it did, congratulations, you went horribly wrong somewhere. You're on your own now - '{op}' ,\n\t\t---> interpreter exited with error[#INTRPTR006] line:col {line}:{col}")
 
-class InsufficientFuncArgs(Exception):
+class InsufficientFuncArgs(Exception): 
     def __init__(self):
         super().__init__(f"class source.fatal:: in-built function did not received specified arguments,\n\t\t---> interpreter exited with error[#INTRPTR007]")
 
@@ -79,10 +79,11 @@ class Environment:
     #---Enters a value in the namespace-----------------
     def define(self,name,value,is_const=False):
         """Adds the variable and its value to namespace."""
-        if name in self.vars:
-            raise AccidentalReassError(name)
+        name_value = name
+        if name_value in self.vars:
+            raise AccidentalReassError(name_value,name.line,name.col)
         else:
-            self.vars[name] = (value, is_const)
+            self.vars[name_value] = (value, is_const)
     
     #---Finds the value of the variable in the given environment/scope-------------------
     def lookup(self,name):
@@ -219,24 +220,25 @@ class Evaluator:
         left = self.evaluate(node.left)
         operator = node.op.token_value
         right = self.evaluate(node.right)
+        print(type(operator))
 
         if operator == '+':
             try:
                 return left + right
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line,node.op.col)
 
         elif operator == '-':
             try:
                 return left - right
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line,node.op.col)
 
         elif operator == '*':
             try:
                 return left * right
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line,node.op.col)
         
         elif operator == '/':
             if right != 0:
@@ -298,13 +300,13 @@ class Evaluator:
                 raise MalformedTypeOperation()
 
         else:
-            raise UnrecognisedBinaryOp(operator)
+            raise UnrecognisedBinaryOp(node.op.line,node.op.col)
     
     def visit_VarAccessNode(self,node):
         return self.current_env.lookup(node.var_name_token)
     
     def visit_VarAssignNode(self,node):
-        name = node.var_name_token.token_value
+        name = node.var_name_token
         value = self.evaluate(node.value_node)
         const = node.is_const
         self.current_env.define(name,value,const)
@@ -329,7 +331,7 @@ class Evaluator:
             try:
                 value = int(user_input)
             except ValueError:
-                raise InvalidTypeConv(node.variable,type_)
+                raise InvalidTypeConv(node.variable,type_,node.variable.line,node.variable.col)
 
 
         elif type_ == 'float':
@@ -392,7 +394,7 @@ class Evaluator:
     
     def visit_FuncCallNode(self, node):
         if node.func_name not in self.functions:
-            raise UndefinedFunc(node.func_name)
+            raise UndefinedFunc(node.func_name.token_value,node.func_name.line,node.func_name.col)
         
         func_def = self.functions[node.func_name]
         func_env = Environment(parent=self.current_env)

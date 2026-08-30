@@ -70,7 +70,7 @@ class ArrayLiteralNode(AST):
 
 class ArrayAssignNode(AST): ############
     def __init__(self,name,elements):
-        self.name = name.token_value 
+        self.name = name
         self.elements = elements 
     def __repr__(self):
         return f"(ArrayAssign {self.name}={self.elements}"
