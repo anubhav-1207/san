@@ -14,11 +14,13 @@
 
 #---Native Function Node------------------------------------------------------------
 class NativeBuiltInFunctions:
-    def __init__(self,name,expected_args,method):
+    def __init__(self,name,expected_args,method,line=None,col=None):
         self.name = name 
         self.expected_args = expected_args
         self.method = method
-        self.is_native = True 
+        self.is_native = True
+        self.line = line
+        self.col = col
 
 #---Type Checking--------------------------
 def typeof(args):

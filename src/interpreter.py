@@ -403,7 +403,12 @@ class Evaluator:
         if hasattr(func_def,'is_native'):
             evaluated_args = [self.evaluate(arg) for arg in node.func_args] #turn all the arguments into a list
             if len(evaluated_args) not in func_def.expected_args:
-                raise InsufficientFuncArgs(func_def.expected_args,"Unavailable","Unavailable")
+                line = getattr(func_def, 'line', None)
+                col = getattr(func_def, 'col', None)
+                if line is None or col is None:
+                    line = node.func_name.line
+                    col = node.func_name.col
+                raise InsufficientFuncArgs(func_def.expected_args,line,col)
         
             return func_def.method(evaluated_args)
 
