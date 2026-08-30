@@ -354,12 +354,19 @@ class Evaluator:
 
 
     def visit_IfNode(self,node):
-        condition = self.evaluate(node.condition)
-        if self.is_truthy(condition):
+        if_condition = self.evaluate(node.if_condition)
+        elif_condition = self.evaluate(node.elif_condition)
+        if self.is_truthy(if_condition):
             result = None 
             for stmt in node.if_body:
                 result = self.evaluate(stmt)
             return result 
+        
+        elif self.is_truthy(elif_condition):
+            result = None
+            for stmt in node.elif_body:
+                result = self.evaluate(stmt)
+            return result
         
         elif node.else_body:
             result = None

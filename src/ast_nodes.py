@@ -143,15 +143,17 @@ class ProgramNode(AST):
 
 #---Conditionals Node--------------------------------------------------------
 class IfNode(AST):
-    def __init__(self,condition,if_body,else_body=None):
-        self.condition = condition 
+    def __init__(self,if_condition,if_body,elif_condition,elif_body,else_body=None):
+        self.if_condition = if_condition 
         self.if_body = if_body
+        self.elif_condition = elif_condition
+        self.elif_body = elif_body
         self.else_body = else_body
     def __repr__(self):
         if self.else_body:
-            return f"(IF {self.condition} THEN {self.if_body} ELSE {self.else_body})"
+            return f"(IF {self.if_condition} THEN {self.if_body} ELIF {self.elif_condition} {self.elif_body} ELSE {self.else_body})"
         else:
-            return f"(IF {self.condition} THEN {self.if_body})"
+            return f"(IF {self.if_condition} THEN {self.if_body} ELIF {self.elif_condition} {self.elif_body})"
 
 #---While Node--------------------------------------------------------
 class WhileNode(AST):
