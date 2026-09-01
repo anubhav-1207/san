@@ -114,7 +114,8 @@ Comparison operators evaluate expressions and return a boolean result (True or F
 dec result = (10 > 5); // True
 ```
 
-4.3 Logical Operators
+**4.3 Logical Operators**
+
 Combine multiple boolean evaluations using logical operators:
  * && Logical AND (Returns True if both sides are true)
  * || Logical OR (Returns True if at least one side is true)
