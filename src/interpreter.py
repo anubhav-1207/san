@@ -315,11 +315,6 @@ class Evaluator:
         self.current_env.reassign_var(name,value)
         return value
     
-    def visit_StdOutNode(self,node):
-        value = self.evaluate(node.value_node)
-        print(value)
-        return value
-    
     def visit_ScanNode(self,node):
         user_input = input()
         type_ = node.type_

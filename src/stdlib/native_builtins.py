@@ -1,12 +1,6 @@
 #stdlib/native_builtins.py 
 #-----------------------------------------------------------------------------------
 # This file contains all the built-in methods
-# Currently, it has:
-# - typeof()
-# - setint()
-# - setstr()
-# - setfloat()
-# - getrange()
 
 # The built-in methods are automatically loaded into the memory and importing this will
 # raise error
@@ -71,6 +65,11 @@ def getrange(args):
 def tup(args):
     array = args[0]
     return tuple(array)
+
+def stdout(args):
+    message = args[0]
+    return print(message)
+
 #----------------------------------------------------------
 def inject_builtin_methods(function_table):
     """Loads the functions into memory."""
@@ -80,6 +79,8 @@ def inject_builtin_methods(function_table):
     function_table["tup"] = NativeBuiltInFunctions("tup",(1,),tup)
     function_table["setfloat"] = NativeBuiltInFunctions("setfloat",(1,),setfloat)
     function_table["getrange"] = NativeBuiltInFunctions("getrange",(1,2,3),getrange)
+    function_table["stdout"] = NativeBuiltInFunctions("stdout",(1,),stdout)
+    # function_table["scank"] = NativeBuiltInFunctions("outk",(1,),scank)
 
 #=================================================================
 

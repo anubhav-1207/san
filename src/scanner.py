@@ -66,7 +66,6 @@ KEYWORDS = {
     'func', 'return',
     'if', 'else', 'elif',
     'loop', 'for', 'in', 'break', 'skip',
-    'stdout', 'scan',
     'Null',
     'use',
     'try', 'catch', 'drop',
