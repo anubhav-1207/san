@@ -195,13 +195,6 @@ class BreakNode(AST):
     def __repr__(self):
         return f"(BREAK)"
 
-#---Stdout Node--------------------------------------------------------
-class StdOutNode(AST):
-    def __init__(self,value_node):
-        self.value_node = value_node
-    def __repr__(self):
-        return f"(STDOUT {self.value_node})"
-
 #---Scan Node--------------------------------------------------------
 class ScanNode(AST):
     def __init__(self,variable,type_):

@@ -336,14 +336,6 @@ class Parser:
             self.advance()
             return BreakNode()
         
-        #---Standard output function--------------------------------------------------
-        elif self.current_token and self.current_token.token_value == 'stdout':
-            self.expect([self.current_token.type_])
-            self.expect([TT_LPAREN])
-            value = self.parse_logical_or()
-            self.expect([TT_RPAREN])
-            return StdOutNode(value)
-        
         #---Scan---------------------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'scan':
             self.expect([self.current_token.type_])
