@@ -1,7 +1,7 @@
 # San Programming Language
 
 <div align="center">
-  <img src="./logo.png" alt="Arc Logo" width="150" height="150" style="border-radius: 100%;">
+  <img src="./logo.png" alt="Arc Logo" width="150" height="150" style="border-radius: 50%;">
 </div>
 
 <div align="center">
