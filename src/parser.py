@@ -180,7 +180,7 @@ class Parser:
                 #if not slicing, return indexing node
                 self.expect([TT_RBRACKET])
                 return IndexingNode(variable,start_index)
-            
+
             #if neither func call, slicing, or indexing, then it is just accessing the variable
             return VarAccessNode(variable)
         
@@ -253,7 +253,12 @@ class Parser:
                 is_const = True
                 self.expect([self.current_token.type_])
                 var_name_token = self.expect([TT_IDENT])
-                self.expect([TT_EQ])
+                if self.current_token and self.current_token.type_ == TT_COLON:
+                    print("True for type ")
+                    self.expect([TT_EQ])
+
+                else:
+                    self.expect([TT_EQ])
                 
                 #checking if an array is being declared with const, then raising error if it is 
                 if self.current_token.token_value != '[':
@@ -266,7 +271,13 @@ class Parser:
                 is_const = False
                 self.expect([self.current_token.type_])
                 var_name_token = self.expect([TT_IDENT])
-                self.expect([TT_EQ])
+
+                if self.current_token and self.current_token.type_ == TT_COLON:
+                    self.advance();self.advance()
+                    self.expect([TT_EQ])
+                else:
+                    self.expect([TT_EQ])
+
                 var_value_node = self.parse_comp_expr()
                 return VarAssignNode(var_name_token,var_value_node,is_const)
 
