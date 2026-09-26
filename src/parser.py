@@ -291,8 +291,9 @@ class Parser:
             if not if_body:
                 raise ControlFLowError("if",self.current_token.line,self.current_token.col)
             
+            # The following two values are set to None since San allows elif and else to be optional.
             elif_body = None
-            elif_condition = None
+            elif_condition = None 
             if self.current_token and self.current_token.token_value == 'elif':
                 self.advance()
                 self.expect(TT_LPAREN)
