@@ -292,6 +292,7 @@ class Parser:
                 raise ControlFLowError("if",self.current_token.line,self.current_token.col)
             
             elif_body = None
+            elif_condition = None
             if self.current_token and self.current_token.token_value == 'elif':
                 self.advance()
                 self.expect(TT_LPAREN)

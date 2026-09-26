@@ -143,7 +143,7 @@ class ProgramNode(AST):
 
 #---Conditionals Node--------------------------------------------------------
 class IfNode(AST):
-    def __init__(self,if_condition,if_body,elif_condition,elif_body,else_body=None):
+    def __init__(self,if_condition,if_body,elif_condition=None,elif_body=None,else_body=None):
         self.if_condition = if_condition 
         self.if_body = if_body
         self.elif_condition = elif_condition
