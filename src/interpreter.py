@@ -350,7 +350,6 @@ class Evaluator:
         return value
 
 
-
     def visit_IfNode(self,node):
         if_condition = self.evaluate(node.if_condition)
         elif_condition = self.evaluate(node.elif_condition)
