@@ -343,7 +343,10 @@ class Evaluator:
             except ValueError:
                 raise InvalidTypeConv(node.variable,type_)
 
-        self.current_env.define(node.variable,value)
+        try:
+            self.current_env.define(node.variable,value)
+        except AccidentalReassError:
+            self.current_env.reassign_var(node.variable,value)
         return value
 
 
