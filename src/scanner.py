@@ -183,8 +183,12 @@ class Lexer:
                 if self.current_char() == '\n':
                     self.line += 1
                     result.append(self.advance())
+                
+                elif self.current_char() in ('(',')','[',']','{','}'):
+                    raise UnterminatedStringLiteral(self.line,self.col)
                 else:
                     result.append(self.advance())
+
             if self.current_char() == string_initialiser:
                 self.advance()
                 text = "".join(result)
