@@ -6,10 +6,7 @@
 
 # ---Importing Dependencies---------------------------------------------
 import sys
-import src
-import colorama
 from colorama import Fore, init
-from src.scanner import *
 from src.parser import *
 from src.interpreter import *
 
@@ -38,14 +35,14 @@ def run_file(filename,pipeline_flags=False):
             if pipeline_flags == 'explicit':
                 lexer = Lexer(source)
                 print(Fore.RED+"\n====================================================")
-                print(Fore.CYAN + "[-]" + Fore.GREEN+" Input source read")
+                print(Fore.CYAN + "[-]" + Fore.GREEN+" Input source read successfully")
                 print(Fore.RED+"\n====================================================")
                 
                 tokens = lexer.tokenise()
                 
                 print(Fore.RED+"\n====================================================")
                 print(Fore.CYAN + "\n[!]" + Fore.GREEN+" Initialising Lexer")
-                print(Fore.CYAN + "\t[-]" + Fore.GREEN+" Tokenisation Finished")
+                print(Fore.CYAN + "\t[-]" + Fore.GREEN+" Tokenization Finished")
                 
                 for tok in tokens:
                     print(Fore.LIGHTMAGENTA_EX + "\t\t[+]" + Fore.BLUE+f"{tok}")
@@ -64,7 +61,7 @@ def run_file(filename,pipeline_flags=False):
                 
                 print(Fore.RED+"\n====================================================")
                 evaluator = Evaluator()
-                print(Fore.CYAN + "\n\t[-]" + Fore.GREEN+" Recieved AST")
+                print(Fore.CYAN + "\n\t[-]" + Fore.GREEN+" Received AST")
                 print(Fore.CYAN + "\t[-]" + Fore.GREEN+" Evaluated AST")
                 print(Fore.RED+"\n====================================================")
                 
@@ -97,8 +94,3 @@ if __name__ == "__main__":
     else:
         run_file(sys.argv[1])
         sys.exit(1)
-#=====================================================================================
-
-###############################################################################
-#                           END OF FILE
-###############################################################################
