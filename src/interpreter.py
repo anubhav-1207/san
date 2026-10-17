@@ -470,8 +470,10 @@ class Evaluator:
         return result
 
     def visit_TupleLiteralNode(self,node):
+        tuple_ = []
         for elem in node.elements:
-            self.evaluate(elem)
+            tuple_.append(self.evaluate(elem))
+        return tuple(tuple_)
     #---------------------------------------------------------------------
         
 # ########################################################################

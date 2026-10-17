@@ -17,7 +17,7 @@ class ControlFLowError(Exception):
 
 class NullFuncBody(Exception):
     def __init__(self,line,col):
-        super().__init__(f"class source.recursive:: environmental statements found null in function definiton, cannot handle null function,\n\t\t---> parser exited with error[#PAR003], line:col {line}:{col}")
+        super().__init__(f"class source.recursive:: environmental statements found null in function definition, cannot handle null function,\n\t\t---> parser exited with error[#PAR003], line:col {line}:{col}")
 
 class ConstantArrayError(Exception):
     def __init__(self,array,line,col):
@@ -194,7 +194,7 @@ class Parser:
                 self.expect([TT_RBRACKET])
                 return IndexingNode(variable,start_index)
 
-            #if neither func call, slicing, or indexing, then it is just accessing the variable
+            #if neither func call, slicing, nor indexing, then it is just accessing the variable
             return VarAccessNode(variable)
 
         #---ARRAYS---------------------------------------
