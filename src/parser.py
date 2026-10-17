@@ -51,7 +51,8 @@ class Parser:
     def match(self,token_types):
         """Tells if the current token_type matches the given token types(s)."""
         return self.current_token.type_ in token_types
-    
+
+
     #---Expect---------------------------------------------------
     def expect(self,token_types):
         """Matches the current token, if true, then consumes it, else returns error."""
@@ -114,11 +115,23 @@ class Parser:
         
         #---LPAREN------------------------------
         elif self.match([TT_LPAREN]):
-            self.expect([TT_LPAREN])
-            expression_node = self.parse_logical_or()
-            self.expect([TT_RPAREN])
-            return expression_node
-        
+            self.advance()
+
+            #---Tuples------------------------------------------------------------
+            if self.peek() != TT_COMMA:
+                elements = []
+                if self.current_token and self.current_token != TT_RPAREN:
+                    elements.append(self.parse_logical_or())
+                    while self.current_token and self.current_token.type_ == TT_COMMA:
+                        self.expect([TT_COMMA])
+                        elements.append(self.parse_logical_or())
+                return TupleLiteralNode(elements)
+
+            elif self.peek() == TT_COMMA:
+                expression_node = self.parse_logical_or()
+                self.expect([TT_RPAREN])
+                return expression_node
+
         #---NULL---------------------------------
         elif self.current_token and self.current_token.token_value == 'Null':
             self.advance()
@@ -183,7 +196,7 @@ class Parser:
 
             #if neither func call, slicing, or indexing, then it is just accessing the variable
             return VarAccessNode(variable)
-        
+
         #---ARRAYS---------------------------------------
         elif self.match([TT_LBRACKET]):
             self.expect([TT_LBRACKET])
@@ -211,7 +224,7 @@ class Parser:
     
     #---Term Parser------------------------------------------------------------
     def parse_term(self):
-        """Parses terminals values."""
+        """Parses terminal values."""
         left = self.parse_power()
         while self.current_token and self.match([TT_STAR,TT_SLASH]):
             op = self.current_token
@@ -256,7 +269,6 @@ class Parser:
                 if self.current_token and self.current_token.type_ == TT_COLON:
                     print("True for type ")
                     self.expect([TT_EQ])
-
                 else:
                     self.expect([TT_EQ])
                 

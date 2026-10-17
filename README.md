@@ -178,30 +178,27 @@ You can check the `/tests` directory for more examples, files with the prefix "i
 # Architecture 
 San consists of the following core components: 
 - **Lexer**: To generate tokens from the raw source code.
-- **Parser**: To create meaningingful hierarchy among the code and to enforce precedence (mathematical and logical)
+- **Parser**: To create meaningful hierarchy among the code and to enforce precedence (mathematical and logical)
 - **Interpreter**: It uses the visitor pattern method to visit and execute nodes.
 
 # Limitations
 - No module system
-- No built-in standard library
 - Single threaded execution
 - No type system
 
 # Strengths
-San is a programming language that has a great potential to be someone's first language because when you're learning San, you learning the conventions as well as structure and syntax of various other languages such as C, C++, Python, Javascript. 
+San is a programming language that has a great potential to be someone's first language because when you're learning San, you are learning the conventions as well as structure and syntax of various other languages such as C, C++, Python, JavaScript. 
 
 # Why I Made San
-- Wanted to prove compiler development is possible in an android
+- Wanted to prove compiler development is possible on an android
 - Curiosity & interest
 - To surpass my mentors
 - To learn about computers
-- To be different
 - As a school project, because everyone else were making boring stuff like games, library management system, etc.
 
 # Acknowledgements
 A huge thanks to:
-- People of `r/compilers` in reddit
-- To LLMs (ChatGPT, Gemini, Claude), though I didn't vibe-code it, but I learnt it with the help of AI because most of the tutorials were in Java or C, which I didn't knew.
-- To myself, for motivation
+- People of `r/compilers` in reddit.
+- To LLMs (ChatGPT, Gemini, Claude), though I didn't vibe-code it, but I learnt it with the help of AI because most of the tutorials were in Java or C, which I didn't know.
 - My friend Aditya Vishal for resources, though he is not in programming field, but he provided me with much needed basic stuff when I did not have them.
-- Ofcourse, towards coffee. 
+- Of course, towards coffee. 

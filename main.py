@@ -15,7 +15,7 @@ init(autoreset = True)
 #-----------------------------------------------------------------------
 
 #---File Runner Function-----------------------------------------------
-def run_file(filename,pipeline_flags=False):
+def run_file(filename,pipeline_flags= False):
     """
     Reads the terminal input and runs the file.
     """
@@ -34,10 +34,6 @@ def run_file(filename,pipeline_flags=False):
         if pipeline_flags: # when user wants to read the tokens and ASTs
             if pipeline_flags == 'explicit':
                 lexer = Lexer(source)
-                print(Fore.RED+"\n====================================================")
-                print(Fore.CYAN + "[-]" + Fore.GREEN+" Input source read successfully")
-                print(Fore.RED+"\n====================================================")
-                
                 tokens = lexer.tokenise()
                 
                 print(Fore.RED+"\n====================================================")
