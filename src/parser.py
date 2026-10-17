@@ -126,7 +126,7 @@ class Parser:
                         self.expect([TT_COMMA])
                         elements.append(self.parse_logical_or())
                 return TupleLiteralNode(elements)
-
+ 
             elif self.peek() == TT_COMMA:
                 expression_node = self.parse_logical_or()
                 self.expect([TT_RPAREN])
