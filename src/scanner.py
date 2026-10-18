@@ -72,6 +72,7 @@ KEYWORDS = {
     'int','float','str','bool',
 }
 
+#---Constants-----------------------------------------------------------
 NUMBERS = "1234567890"
 ALPHABETS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 SYMBOLS = """ !@#$%,^&*(})<>?/{:;|[]+=-`~'" """
@@ -120,27 +121,21 @@ class Lexer:
         self.pos = 0
         self.col = 0
         self.tokens = []
-    def __repr__(self) -> None:
-        return f"Token({Tokens.token_type}:{Tokens.token_value})" 
+    def __repr__(self):
+        return f"Token -> ({Tokens.type_}:{Tokens.token_value})"
 
 
-    
     #---Current Character------------------------------------------------------------
     def current_char(self):
-        """
-        Returns which character the pointer is at.
-        """
+        """Returns which character the pointer is at."""
         if self.pos < len(self.source):
             return self.source[self.pos]
         else:
             return None
 
-
     #---Advance-------------------------------------------------------------------------
     def advance(self):
-        """
-        Stores & returns the current character and moves forward.
-        """
+        """Stores & returns the current character and moves forward."""
         char = self.source[self.pos]
         self.pos += 1
         self.col += 1
@@ -149,21 +144,18 @@ class Lexer:
 
     #---Peek-----------------------------------------------------------------------------
     def peek(self):
-        """
-        Returns the character next to the pointer but self.pod doesn't increase.
-        """
+        """Returns the character next to the pointer but self.pod doesn't increase."""
         if (self.pos + 1) < len(self.source):
             return self.source[self.pos+1]
         else:
             return None
 
     #---Add---------------------------------------------------------------------------
-    def add(self,token_type, line,token_value = None):
+    def add(self,token_type, line,token_value = None) -> None:
         """
         Appends the token objects into the list.
         """
         self.tokens.append(Tokens(token_type,line,token_value,self.col))
-
 
     #---Tokenise-----------------------------------------------------------------------
     def tokenise(self):
@@ -173,7 +165,7 @@ class Lexer:
         
 #=======================================================================================
         #---String Reader------------------------------------------------------
-        def read_strings(self,string_initialiser):
+        def read_strings(self,string_initialiser)-> None:
             """
             Called when the lexer spots a " or a ', and then continues reading till another of the like type is spotted.
             """
@@ -198,7 +190,7 @@ class Lexer:
             
 #=======================================================================================        
         #---Ident/kWord Reader----------------------------------------------------------
-        def read_ident(self):
+        def read_ident(self) -> None:
             """
             Checks if a given sequence of characters is a keyword or and identifier.
             """
@@ -215,7 +207,7 @@ class Lexer:
 
 #=======================================================================================
         #---Read Numbers-----------------------------------------------------------------
-        def read_numbers(self):
+        def read_numbers(self) -> None:
             """Checks if a given sequence of numbers is a float or an integer."""
             result = []
             while self.current_char() is not None and self.current_char() in "1234567890.":
@@ -244,7 +236,7 @@ class Lexer:
                 self.col = 1
 
             #---Spaces----------------------
-            elif char.isspace(): 
+            elif char.isspace():
                 self.advance()
             
             #---Equals----------------------
@@ -355,8 +347,8 @@ class Lexer:
             elif char in ALPHABETS or char == '_': 
                 read_ident(self)
             
-            #---Numbers----------stdout(typeof("hello"))------------
-            elif char in NUMBERS: 
+            #---Numbers----------------------
+            elif char in NUMBERS:
                 read_numbers(self)
             
             else:

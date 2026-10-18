@@ -468,6 +468,12 @@ class Evaluator:
                 self.current_env.reassign_var(variable,i)
                 result = self.evaluate(stmt)
         return result
+
+    def visit_TupleLiteralNode(self,node):
+        tuple_ = []
+        for elem in node.elements:
+            tuple_.append(self.evaluate(elem))
+        return tuple(tuple_)
     #---------------------------------------------------------------------
         
 # ########################################################################

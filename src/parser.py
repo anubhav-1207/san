@@ -17,11 +17,16 @@ class ControlFLowError(Exception):
 
 class NullFuncBody(Exception):
     def __init__(self,line,col):
-        super().__init__(f"class source.recursive:: environmental statements found null in function definiton, cannot handle null function,\n\t\t---> parser exited with error[#PAR003], line:col {line}:{col}")
+        super().__init__(f"class source.recursive:: environmental statements found null in function definition, cannot handle null function,\n\t\t---> parser exited with error[#PAR003], line:col {line}:{col}")
 
 class ConstantArrayError(Exception):
     def __init__(self,array,line,col):
         super().__init__(f"class source.fatal:: environment array{array} found to be a constant, cannot handle constant arrays,\n\t\t---> parser exited with error[#PAR003], line:col {line}:{col}")
+
+class MutableTupleError(Exception):
+    def __init__(self,tuple,line,col):
+        super().__init__(f"class source.fatal:: environment tuple {tuple.token_value} found to be mutable, cannot initialise mutable tuples,\n\t\t---> parser exited with error[#PAR004], line:col {line}:{col}")
+
 
 #---Parser Class---------------------------------------------------------------------
 class Parser:
@@ -51,7 +56,8 @@ class Parser:
     def match(self,token_types):
         """Tells if the current token_type matches the given token types(s)."""
         return self.current_token.type_ in token_types
-    
+
+
     #---Expect---------------------------------------------------
     def expect(self,token_types):
         """Matches the current token, if true, then consumes it, else returns error."""
@@ -114,11 +120,28 @@ class Parser:
         
         #---LPAREN------------------------------
         elif self.match([TT_LPAREN]):
-            self.expect([TT_LPAREN])
-            expression_node = self.parse_logical_or()
-            self.expect([TT_RPAREN])
-            return expression_node
-        
+            self.advance()
+
+            #---Expressions inside parenthesis---------------------------------------------
+            if self.peek().type_ != TT_COMMA:
+                expression_node = self.parse_logical_or()
+                self.expect([TT_RPAREN])
+                return expression_node
+
+            #---Tuples----------------------------------------------------------------------
+            else:
+                elements = []
+
+                if self.current_token and self.current_token.type_ != TT_RPAREN:
+                    elements.append(self.parse_logical_or())
+                    while self.current_token and self.current_token.type_ == TT_COMMA:
+                        self.expect([TT_COMMA])
+                        elements.append(self.parse_logical_or())
+
+                self.expect([TT_RPAREN])
+                return TupleLiteralNode(elements)
+
+
         #---NULL---------------------------------
         elif self.current_token and self.current_token.token_value == 'Null':
             self.advance()
@@ -181,9 +204,9 @@ class Parser:
                 self.expect([TT_RBRACKET])
                 return IndexingNode(variable,start_index)
 
-            #if neither func call, slicing, or indexing, then it is just accessing the variable
+            #if neither func call, slicing, nor indexing, then it is just accessing the variable
             return VarAccessNode(variable)
-        
+
         #---ARRAYS---------------------------------------
         elif self.match([TT_LBRACKET]):
             self.expect([TT_LBRACKET])
@@ -211,7 +234,7 @@ class Parser:
     
     #---Term Parser------------------------------------------------------------
     def parse_term(self):
-        """Parses terminals values."""
+        """Parses terminal values."""
         left = self.parse_power()
         while self.current_token and self.match([TT_STAR,TT_SLASH]):
             op = self.current_token
@@ -256,7 +279,6 @@ class Parser:
                 if self.current_token and self.current_token.type_ == TT_COLON:
                     print("True for type ")
                     self.expect([TT_EQ])
-
                 else:
                     self.expect([TT_EQ])
                 
@@ -278,8 +300,11 @@ class Parser:
                 else:
                     self.expect([TT_EQ])
 
-                var_value_node = self.parse_comp_expr()
-                return VarAssignNode(var_name_token,var_value_node,is_const)
+                if self.current_token.token_value != '(':
+                    var_value_node= self.parse_comp_expr()
+                    return VarAssignNode(var_name_token,var_value_node,is_const)
+                else:
+                    raise MutableTupleError(var_name_token,self.current_token.line,self.current_token.col)
 
         #---IF and ELSE--------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'if':

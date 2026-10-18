@@ -218,6 +218,12 @@ class ForNode(AST):
     
     def __repr__(self):
         return f"(FOR {self.variable} in {self.iterable} :: {self.statements})"
+
+class TupleLiteralNode(AST):
+    def __init__(self,elements):
+        self.elements = tuple(elements)
+    def __repr__(self):
+        return f"(TUPLE {self.elements})"
 #---------------------------------------------------------------------
 
 #####################################################################
