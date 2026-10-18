@@ -131,8 +131,11 @@ stdout(y[0]) //direct printing of the element of array
 ## Tuples
 ```c
 dec x = tup([1,2,3,4,5,6,7,8])
+const y = (1,2,3,4,5,6,7,8)
 stdout(x[3])
+stdout(y[3])
 stdout(len(x))
+stdout(len(y))
 ```
 
 ## Statement Termination 
