@@ -122,10 +122,13 @@ class Parser:
         elif self.match([TT_LPAREN]):
             self.advance()
 
+            #---Expressions inside parenthesis---------------------------------------------
             if self.peek().type_ != TT_COMMA:
                 expression_node = self.parse_logical_or()
                 self.expect([TT_RPAREN])
                 return expression_node
+
+            #---Tuples----------------------------------------------------------------------
             else:
                 elements = []
 
