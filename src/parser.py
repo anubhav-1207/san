@@ -23,6 +23,11 @@ class ConstantArrayError(Exception):
     def __init__(self,array,line,col):
         super().__init__(f"class source.fatal:: environment array{array} found to be a constant, cannot handle constant arrays,\n\t\t---> parser exited with error[#PAR003], line:col {line}:{col}")
 
+class MutableTupleError(Exception):
+    def __init__(self,tuple,line,col):
+        super().__init__(f"class source.fatal:: environment tuple {tuple.token_value} found to be mutable, cannot initialise mutable tuples,\n\t\t---> parser exited with error[#PAR004], line:col {line}:{col}")
+
+
 #---Parser Class---------------------------------------------------------------------
 class Parser:
     def __init__(self,tokens):
@@ -292,8 +297,11 @@ class Parser:
                 else:
                     self.expect([TT_EQ])
 
-                var_value_node = self.parse_comp_expr()
-                return VarAssignNode(var_name_token,var_value_node,is_const)
+                if self.current_token.token_value != '(':
+                    var_value_node= self.parse_comp_expr()
+                    return VarAssignNode(var_name_token,var_value_node,is_const)
+                else:
+                    raise MutableTupleError(var_name_token,self.current_token.line,self.current_token.col)
 
         #---IF and ELSE--------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'if':
