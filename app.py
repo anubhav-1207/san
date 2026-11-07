@@ -2,142 +2,90 @@ from flask import Flask, render_template_string, request, jsonify
 from contextlib import redirect_stdout
 import io
 
-from src.scanner import (
-    Lexer,
-    InvalidTokenError,
-    UnterminatedStringLiteral,
-    InvalidIdentifier,
-    InvalidFloatLiteral,
-    UnintialisedStringLiteral
-)
-
+from src.scanner import Lexer
 from src.parser import Parser
-from src.interpreter import Evaluator
+from src.evaluator import Evaluator
 
 
 app = Flask(__name__)
 
 
-# ==========================================================
+# ============================================================
 # AST SERIALIZER
-# ==========================================================
+# ============================================================
 
 def serialize_ast(node):
 
     if node is None:
-        return {
-            "name": "None",
-            "value": None,
-            "children": []
-        }
+        return None
 
-    # Lists
-    if isinstance(node, (list, tuple)):
-
-        return {
-            "name": "Sequence",
-            "children": [
-                {
-                    "name": f"[{index}]",
-                    **serialize_ast(item)
-                }
-                for index, item in enumerate(node)
-            ]
-        }
-
-    # Token objects
-    if hasattr(node, "type_") and hasattr(node, "token_value"):
-
-        return {
-            "name": "Token: " + str(node.type_),
-            "value": node.token_value,
-            "attributes": {
-                "line": node.line,
-                "column": node.col
-            },
-            "children": []
-        }
-
-    # Primitive values
     if isinstance(node, (str, int, float, bool)):
+        return node
 
-        return {
-            "name": str(node),
-            "value": node,
-            "children": []
-        }
+    if isinstance(node, (list, tuple)):
+        return [serialize_ast(item) for item in node]
 
-    # AST nodes
     if hasattr(node, "__dict__"):
 
-        children = []
+        result = {
+            "name": node.__class__.__name__,
+            "children": []
+        }
 
-        for key, value in vars(node).items():
+        for key, value in node.__dict__.items():
 
-            # Nested AST nodes or tokens
             if hasattr(value, "__dict__"):
 
-                children.append({
+                result["children"].append({
                     "name": key,
-                    **serialize_ast(value)
+                    "children": [serialize_ast(value)]
                 })
 
-            # Lists and tuples
             elif isinstance(value, (list, tuple)):
 
-                children.append({
-                    "name": key,
-                    **serialize_ast(value)
-                })
+                children = []
 
-            # Dictionaries
-            elif isinstance(value, dict):
+                for index, item in enumerate(value):
+                    if hasattr(item, "__dict__"):
+                        children.append({
+                            "name": f"[{index}]",
+                            "children": [serialize_ast(item)]
+                        })
+                    else:
+                        children.append({
+                            "name": f"{key}[{index}]",
+                            "value": str(item),
+                            "children": []
+                        })
 
-                children.append({
-                    "name": key,
-                    "children": [
-                        {
-                            "name": str(k),
-                            **serialize_ast(v)
-                        }
-                        for k, v in value.items()
-                    ]
-                })
+                result["children"].extend(children)
 
-            # Primitive attributes
             else:
-
-                children.append({
+                result["children"].append({
                     "name": key,
-                    "value": value,
+                    "value": str(value),
                     "children": []
                 })
 
-        return {
-            "name": type(node).__name__,
-            "children": children
-        }
+        return result
 
-    return {
-        "name": str(node),
-        "children": []
-    }
+    return str(node)
 
 
-# ==========================================================
+# ============================================================
 # HTML
-# ==========================================================
+# ============================================================
 
-HTML = """
-
+HTML = r"""
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
-<title>San Playground</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://d3js.org/d3.v7.min.js"></script>
+<title>San Playground</title>
 
 <style>
 
@@ -146,311 +94,533 @@ HTML = """
 }
 
 body {
-
-    max-width: 1100px;
-    margin: auto;
-    padding: 20px;
-
-    background: #0f172a;
-    color: #e2e8f0;
-
-    font-family: sans-serif;
-    font-size: 17px;
-
+    margin: 0;
+    padding: 25px;
+    background: #101114;
+    color: #e5e5e5;
+    font-family: Arial, sans-serif;
 }
 
 h1 {
-    color: #60a5fa;
-    font-size: 38px;
+    margin-bottom: 5px;
 }
 
-h2 {
-    color: #93c5fd;
-    margin-top: 35px;
+.subtitle {
+    color: #888;
+    margin-bottom: 25px;
 }
 
-textarea {
+.container {
+    max-width: 1100px;
+    margin: auto;
+}
 
-    width: 100%;
-    height: 300px;
-
-    background: #1e293b;
-    color: #f8fafc;
-
-    border: 1px solid #334155;
+.panel {
+    background: #181a20;
+    border: 1px solid #292c35;
     border-radius: 10px;
-
-    padding: 15px;
-
-    font-family: monospace;
-    font-size: 16px;
-
-    resize: vertical;
-
+    padding: 18px;
+    margin-bottom: 20px;
 }
 
-textarea:focus {
+.panel h2 {
+    margin-top: 0;
+    font-size: 17px;
+}
+
+#editor {
+    border: 1px solid #343844;
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+.cm-editor {
+    min-height: 350px;
+}
+
+.cm-editor.cm-focused {
     outline: none;
-    border-color: #60a5fa;
+}
+
+.cm-scroller {
+    overflow: auto;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
 }
 
 button {
-
-    background: #2563eb;
+    background: #6574e8;
     color: white;
-
     border: none;
-    border-radius: 8px;
-
+    border-radius: 6px;
     padding: 10px 20px;
-
+    margin-top: 12px;
     cursor: pointer;
-    margin: 5px;
-
-    font-size: 15px;
-
 }
 
 button:hover {
-    background: #3b82f6;
+    background: #7887ff;
 }
 
 pre {
-
-    background: #1e293b;
-
-    border: 1px solid #334155;
-    border-radius: 10px;
-
-    padding: 15px;
-
+    background: #111318;
+    border: 1px solid #292c35;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
     white-space: pre-wrap;
-    overflow-x: auto;
-
-    font-family: monospace;
-    font-size: 14px;
-
+    word-break: break-word;
 }
 
-
-/* TOKEN TABLE */
-
-#tokens-container {
-
-    overflow-x: auto;
-
-    background: #1e293b;
-
-    border: 1px solid #334155;
-    border-radius: 10px;
-
+#output {
+    color: #a6e3a1;
 }
 
-.token-table {
+#error {
+    color: #f38ba8;
+}
 
+table {
     width: 100%;
     border-collapse: collapse;
-
-    font-family: monospace;
-    font-size: 14px;
-
+    font-size: 13px;
 }
 
-.token-table th,
-.token-table td {
-
-    padding: 11px;
-
-    border-bottom: 1px solid #334155;
-
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #292c35;
     text-align: left;
-
 }
 
-.token-table th {
-
-    color: #93c5fd;
-    background: #172554;
-
+th {
+    color: #a6adc8;
 }
 
-.token-table tr:hover {
-    background: #334155;
+td {
+    color: #cdd6f4;
 }
 
-
-/* AST */
-
-#ast-container {
-
-    width: 100%;
-    height: 650px;
-
-    background: #111c32;
-
-    border: 1px solid #334155;
-    border-radius: 10px;
-
-    overflow: hidden;
-
+.token-type {
+    color: #89b4fa;
 }
 
-#ast-container svg {
-    display: block;
+#ast-tree {
+    overflow-x: auto;
 }
 
-.link {
-
-    fill: none;
-
-    stroke: #64748b;
-    stroke-width: 2px;
-
+.ast-node {
+    margin-left: 20px;
+    border-left: 1px solid #454957;
+    padding-left: 12px;
 }
 
-.node {
-    cursor: pointer;
-}
-
-.node rect {
-
-    stroke: #94a3b8;
-    stroke-width: 1.5px;
-
-    rx: 8;
-
-}
-
-.node text {
-
-    fill: white;
-
-    font-size: 12px;
-
-    text-anchor: middle;
-
-    pointer-events: none;
-
-}
-
-.node:hover rect {
-
-    stroke: white;
-    stroke-width: 2.5px;
-
-}
-
-
-/* INSPECTOR */
-
-#node-info {
-
-    background: #1e293b;
-
-    border: 1px solid #334155;
-    border-radius: 10px;
-
-    padding: 15px;
-
+.ast-label {
+    display: inline-block;
+    margin: 4px 0;
+    padding: 5px 9px;
+    background: #252936;
+    border-radius: 5px;
+    color: #89b4fa;
     font-family: monospace;
-    font-size: 14px;
+    font-size: 13px;
+}
 
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+.ast-value {
+    color: #a6e3a1;
+    margin-left: 8px;
+    font-family: monospace;
+    font-size: 12px;
+}
 
-    min-height: 60px;
+details > summary {
+    cursor: pointer;
+    list-style: none;
+}
 
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+details > summary::before {
+    content: "▸ ";
+    color: #888;
+}
+
+details[open] > summary::before {
+    content: "▾ ";
 }
 
 </style>
 
 </head>
 
-
 <body>
 
+<div class="container">
 
-<h1>San Playground</h1>
+    <h1>San Playground</h1>
+    <div class="subtitle">Write, execute and inspect San code.</div>
 
-<p>Write and execute San programs.</p>
+
+    <!-- EDITOR -->
+
+    <div class="panel">
+
+        <h2>Code Editor</h2>
+
+        <div id="editor"></div>
+
+        <button onclick="runCode()">Run Code</button>
+
+    </div>
 
 
-<textarea id="code">
-// Please keep the numbers small.
+    <!-- OUTPUT -->
 
-func fib(n){
+    <div class="panel">
 
-    if (n <= 1){
-        return n
+        <h2>Output</h2>
+
+        <pre id="output">Waiting for execution...</pre>
+
+        <pre id="error" style="display:none"></pre>
+
+    </div>
+
+
+    <!-- TOKENS -->
+
+    <div class="panel">
+
+        <h2>Tokens</h2>
+
+        <div id="tokens-container">
+            <p style="color:#888">Run your code to see tokens.</p>
+        </div>
+
+    </div>
+
+
+    <!-- AST -->
+
+    <div class="panel">
+
+        <h2>Abstract Syntax Tree</h2>
+
+        <div id="ast-tree">
+            <p style="color:#888">Run your code to see the AST.</p>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================
+     CODEMIRROR
+======================================================== -->
+
+<script type="module">
+
+import { basicSetup } from
+    "https://esm.sh/codemirror@6.0.1";
+
+import { EditorView, keymap } from
+    "https://esm.sh/@codemirror/view@6.36.5";
+
+import {
+    StreamLanguage,
+    HighlightStyle,
+    syntaxHighlighting
+} from
+    "https://esm.sh/@codemirror/language@6.10.8";
+
+import { tags } from
+    "https://esm.sh/@lezer/highlight@1.2.1";
+
+import { oneDark } from
+    "https://esm.sh/@codemirror/theme-one-dark@6.1.2";
+
+
+// ========================================================
+// SAN KEYWORDS
+// ========================================================
+
+const sanKeywords = new Set([
+    "dec",
+    "const",
+    "flux",
+    "arr",
+
+    "func",
+    "return",
+
+    "if",
+    "else",
+    "elif",
+
+    "loop",
+    "for",
+    "in",
+
+    "break",
+    "skip",
+
+    "Null",
+    "use",
+
+    "scantry",
+
+    "int",
+    "float",
+    "str",
+    "bool"
+]);
+
+
+// ========================================================
+// SAN LANGUAGE MODE
+// ========================================================
+
+const sanMode = StreamLanguage.define({
+
+    startState() {
+        return {
+            inBlockComment: false
+        };
+    },
+
+    token(stream, state) {
+
+        if (stream.eatSpace()) {
+            return null;
+        }
+
+
+        // Block comments
+
+        if (state.inBlockComment) {
+
+            if (stream.match("*/")) {
+                state.inBlockComment = false;
+            } else {
+                stream.next();
+            }
+
+            return "comment";
+        }
+
+        if (stream.match("/*")) {
+            state.inBlockComment = true;
+            return "comment";
+        }
+
+
+        // Single-line comments
+
+        if (stream.match("//")) {
+            stream.skipToEnd();
+            return "comment";
+        }
+
+
+        // Strings
+
+        if (stream.match(/"(?:\\.|[^"\\])*"?/)) {
+            return "string";
+        }
+
+        if (stream.match(/'(?:\\.|[^'\\])*'?/)) {
+            return "string";
+        }
+
+
+        // Numbers
+
+        if (stream.match(/\d+(\.\d+)?/)) {
+            return "number";
+        }
+
+
+        // Identifiers and keywords
+
+        if (stream.match(/[a-zA-Z_][a-zA-Z0-9_]*/)) {
+
+            const word = stream.current();
+
+            if (word === "True" || word === "False") {
+                return "bool";
+            }
+
+            if (sanKeywords.has(word)) {
+                return "keyword";
+            }
+
+            return "variableName";
+        }
+
+
+        // Operators
+
+        if (stream.match(
+            /(\+\+|--|\*\*|>=|<=|==|!=|&&|\|\||[+\-*\/%=<>!])/
+        )) {
+            return "operator";
+        }
+
+
+        // Punctuation
+
+        if (stream.match(/[(){}\[\],;:.]/)) {
+            return "punctuation";
+        }
+
+
+        stream.next();
+
+        return null;
     }
 
-    return fib(n-1)+fib(n-2)
+});
+
+
+// ========================================================
+// SYNTAX COLORS
+// ========================================================
+
+const sanHighlight = HighlightStyle.define([
+
+    {
+        tag: tags.keyword,
+        color: "#c792ea"
+    },
+
+    {
+        tag: tags.bool,
+        color: "#ff9e64"
+    },
+
+    {
+        tag: tags.number,
+        color: "#f78c6c"
+    },
+
+    {
+        tag: tags.string,
+        color: "#c3e88d"
+    },
+
+    {
+        tag: tags.comment,
+        color: "#697098",
+        fontStyle: "italic"
+    },
+
+    {
+        tag: tags.operator,
+        color: "#89ddff"
+    },
+
+    {
+        tag: tags.punctuation,
+        color: "#89ddff"
+    },
+
+    {
+        tag: tags.variableName,
+        color: "#f0f0f0"
+    }
+
+]);
+
+
+// ========================================================
+// EDITOR INITIALIZATION
+// ========================================================
+
+const editor = new EditorView({
+
+    doc: `// Welcome to San
+
+func fibonacci(n) {
+
+    if (n <= 1) {
+        return n;
+    }
+
+    return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-stdout(fib(10))
+print(fibonacci(10));
+`,
 
-</textarea>
+    extensions: [
 
+        basicSetup,
 
-<br><br>
+        oneDark,
 
+        sanMode,
 
-<button onclick="runCode()">
-Run - CTRL + ENTER
-</button>
+        syntaxHighlighting(sanHighlight),
 
+        EditorView.theme({
 
-<h2>Output</h2>
+            "&": {
+                fontSize: "14px"
+            },
 
-<pre id="output"></pre>
+            ".cm-content": {
+                fontFamily: "'JetBrains Mono', monospace"
+            }
 
+        }),
 
-<h2>Tokens</h2>
+        keymap.of([
 
-<div id="tokens-container"></div>
+            {
+                key: "Ctrl-Enter",
 
+                run: () => {
+                    runCode();
+                    return true;
+                }
+            }
 
-<h2>Abstract Syntax Tree</h2>
+        ])
 
+    ],
 
-<div>
+    parent: document.getElementById("editor")
 
-<button onclick="zoomIn()">Zoom In</button>
-
-<button onclick="zoomOut()">Zoom Out</button>
-
-<button onclick="resetZoom()">Reset View</button>
-
-</div>
-
-
-<div id="ast-container"></div>
-
-
-<h2>Node Inspector</h2>
-
-<div id="node-info">
-
-Click an AST node to inspect it.
-
-</div>
+});
 
 
+// Make editor accessible to the rest of the page
+
+window.sanEditor = editor;
+
+</script>
+
+
+<!-- ========================================================
+     PLAYGROUND JAVASCRIPT
+======================================================== -->
 
 <script>
 
 
-// ==========================================================
+// ========================================================
 // RUN CODE
-// ==========================================================
+// ========================================================
 
 async function runCode() {
 
-    const code = document.getElementById("code").value;
+    const code = window.sanEditor.state.doc.toString();
 
-    const output = document.getElementById("output");
+    document.getElementById("output").textContent =
+        "Running...";
 
-    output.innerText = "Running...";
+    document.getElementById("error").style.display = "none";
 
     try {
 
@@ -470,9 +640,31 @@ async function runCode() {
 
         const data = await response.json();
 
-        output.innerText = data.output;
 
-        renderTokens(data.tokens);
+        // Output
+
+        document.getElementById("output").textContent =
+            data.output || "";
+
+
+        // Errors
+
+        if (data.error) {
+
+            const errorBox = document.getElementById("error");
+
+            errorBox.style.display = "block";
+            errorBox.textContent = data.error;
+
+        }
+
+
+        // Tokens
+
+        renderTokens(data.tokens || []);
+
+
+        // AST
 
         renderAST(data.ast);
 
@@ -480,426 +672,196 @@ async function runCode() {
 
     catch (error) {
 
-        output.innerText = "Request Error: " + error;
+        document.getElementById("error").style.display = "block";
+
+        document.getElementById("error").textContent =
+            error.message;
 
     }
 
 }
 
+window.runCode = runCode;
 
 
-// ==========================================================
-// TOKEN RENDERER
-// ==========================================================
+// ========================================================
+// TOKEN TABLE
+// ========================================================
 
 function renderTokens(tokens) {
 
     const container =
         document.getElementById("tokens-container");
 
-    container.innerHTML = "";
+    if (!tokens.length) {
 
-    if (!tokens || tokens.length === 0) {
-        container.innerText = "No tokens.";
+        container.innerHTML =
+            "<p style='color:#888'>No tokens found.</p>";
+
         return;
     }
 
+
     const table = document.createElement("table");
 
-    table.className = "token-table";
+    const header = document.createElement("tr");
 
-    const thead = document.createElement("thead");
+    ["#", "Type", "Value", "Line", "Column"].forEach(name => {
 
-    thead.innerHTML = `
-        <tr>
-            <th>#</th>
-            <th>Type</th>
-            <th>Value</th>
-            <th>Line</th>
-            <th>Column</th>
-        </tr>
-    `;
+        const th = document.createElement("th");
 
-    const tbody = document.createElement("tbody");
+        th.textContent = name;
+
+        header.appendChild(th);
+
+    });
+
+    table.appendChild(header);
+
 
     tokens.forEach((token, index) => {
 
         const row = document.createElement("tr");
 
         const values = [
+
             index,
+
             token.type,
-            token.value ?? "—",
+
+            token.value ?? "None",
+
             token.line,
-            token.col ?? "—"
+
+            token.col ?? "None"
+
         ];
 
-        values.forEach(value => {
+        values.forEach((value, i) => {
 
-            const cell = document.createElement("td");
+            const td = document.createElement("td");
 
-            cell.textContent = value;
+            td.textContent = value;
 
-            row.appendChild(cell);
+            if (i === 1) {
+                td.className = "token-type";
+            }
+
+            row.appendChild(td);
 
         });
 
-        tbody.appendChild(row);
+        table.appendChild(row);
 
     });
 
-    table.appendChild(thead);
 
-    table.appendChild(tbody);
-
-    container.appendChild(table);
+    container.replaceChildren(table);
 
 }
 
 
+// ========================================================
+// AST TREE
+// ========================================================
 
-// ==========================================================
-// AST RENDERER
-// ==========================================================
+function createASTNode(node) {
 
-let svg;
-let zoom;
+    if (node === null || node === undefined) {
+        return document.createTextNode("None");
+    }
+
+    const wrapper = document.createElement("div");
+
+    const details = document.createElement("details");
+
+    details.open = true;
+
+    const summary = document.createElement("summary");
+
+
+    const label = document.createElement("span");
+
+    label.className = "ast-label";
+
+    label.textContent = node.name || "Node";
+
+    summary.appendChild(label);
+
+
+    if (node.value !== undefined) {
+
+        const value = document.createElement("span");
+
+        value.className = "ast-value";
+
+        value.textContent = node.value;
+
+        summary.appendChild(value);
+
+    }
+
+
+    details.appendChild(summary);
+
+
+    if (node.children && node.children.length) {
+
+        const children = document.createElement("div");
+
+        children.className = "ast-node";
+
+        node.children.forEach(child => {
+
+            children.appendChild(createASTNode(child));
+
+        });
+
+        details.appendChild(children);
+
+    }
+
+
+    wrapper.appendChild(details);
+
+    return wrapper;
+
+}
+
 
 function renderAST(ast) {
 
     const container =
-        document.getElementById("ast-container");
+        document.getElementById("ast-tree");
 
-    container.innerHTML = "";
+    container.replaceChildren();
 
-    document.getElementById("node-info").innerText =
-        "Click an AST node to inspect it.";
 
     if (!ast) {
+
+        container.textContent = "No AST available.";
+
         return;
     }
 
-    const width = container.clientWidth;
-    const height = container.clientHeight;
 
-
-    // Create hierarchy
-
-    const root = d3.hierarchy(ast);
-
-
-    // Tree layout
-
-    const tree = d3.tree()
-        .nodeSize([190, 115]);
-
-    tree(root);
-
-
-    const nodes = root.descendants();
-    const links = root.links();
-
-
-    // Calculate dimensions
-
-    const minX = d3.min(nodes, d => d.x);
-    const maxX = d3.max(nodes, d => d.x);
-    const maxY = d3.max(nodes, d => d.y);
-
-    const svgWidth = Math.max(
-        width,
-        maxX - minX + 250
-    );
-
-    const svgHeight = Math.max(
-        height,
-        maxY + 150
-    );
-
-
-    // SVG
-
-    svg = d3.select(container)
-        .append("svg")
-        .attr("width", svgWidth)
-        .attr("height", svgHeight);
-
-
-    const layer = svg.append("g");
-
-
-    // Zoom behaviour
-
-    zoom = d3.zoom()
-        .scaleExtent([0.15, 3])
-        .on("zoom", event => {
-
-            layer.attr(
-                "transform",
-                event.transform
-            );
-
-        });
-
-    svg.call(zoom);
-
-
-    // Position tree
-
-    layer.attr(
-        "transform",
-        `translate(${svgWidth / 2}, 60)`
-    );
-
-
-    // Connectors
-
-    layer.selectAll(".link")
-
-        .data(links)
-
-        .enter()
-
-        .append("path")
-
-        .attr("class", "link")
-
-        .attr("d", d => {
-
-            return `
-                M ${d.source.x} ${d.source.y}
-                C ${d.source.x} ${(d.source.y + d.target.y) / 2},
-                  ${d.target.x} ${(d.source.y + d.target.y) / 2},
-                  ${d.target.x} ${d.target.y}
-            `;
-
-        });
-
-
-    // Node colours
-
-    function getColor(name) {
-
-        if (name.includes("Program"))
-            return "#be185d";
-
-        if (name.includes("Number"))
-            return "#2563eb";
-
-        if (name.includes("Binary"))
-            return "#7c3aed";
-
-        if (name.includes("Func"))
-            return "#0891b2";
-
-        if (name.includes("If"))
-            return "#b45309";
-
-        if (name.includes("While"))
-            return "#047857";
-
-        if (name.includes("Token"))
-            return "#475569";
-
-        return "#334155";
-
-    }
-
-
-    // Nodes
-
-    const node = layer.selectAll(".node")
-
-        .data(nodes)
-
-        .enter()
-
-        .append("g")
-
-        .attr("class", "node")
-
-        .attr(
-            "transform",
-            d => `translate(${d.x},${d.y})`
-        );
-
-
-    node.append("rect")
-
-        .attr("x", -75)
-
-        .attr("y", -25)
-
-        .attr("width", 150)
-
-        .attr("height", 50)
-
-        .attr("fill", d => getColor(d.data.name));
-
-
-    // Node labels
-
-    node.append("text")
-
-        .attr("dy", 5)
-
-        .text(d => {
-
-            let name = d.data.name;
-
-            if (d.data.value !== undefined &&
-                d.data.value !== null) {
-
-                name += ": " + d.data.value;
-
-            }
-
-            return name.length > 23
-                ? name.substring(0, 20) + "..."
-                : name;
-
-        });
-
-
-    // Inspector
-
-    node.on("click", function(event, d) {
-
-        document.getElementById("node-info").innerText =
-            JSON.stringify(d.data, null, 4);
-
-    });
-
-
-    // Initial positioning
-
-    const scale = Math.min(
-        1,
-        width / svgWidth
-    );
-
-    const initialTransform = d3.zoomIdentity
-
-        .translate(
-            width / 2,
-            60
-        )
-
-        .scale(scale);
-
-    svg.call(
-        zoom.transform,
-        initialTransform
-    );
+    container.appendChild(createASTNode(ast));
 
 }
-
-
-
-// ==========================================================
-// ZOOM CONTROLS
-// ==========================================================
-
-function zoomIn() {
-
-    if (!svg || !zoom) return;
-
-    svg.transition()
-        .call(zoom.scaleBy, 1.3);
-
-}
-
-
-function zoomOut() {
-
-    if (!svg || !zoom) return;
-
-    svg.transition()
-        .call(zoom.scaleBy, 0.7);
-
-}
-
-
-function resetZoom() {
-
-    if (!svg || !zoom) return;
-
-    svg.transition()
-        .call(
-            zoom.transform,
-            d3.zoomIdentity.translate(
-                document.getElementById(
-                    "ast-container"
-                ).clientWidth / 2,
-                60
-            )
-        );
-
-}
-
-
-
-// ==========================================================
-// KEYBOARD SHORTCUTS
-// ==========================================================
-
-const editor = document.getElementById("code");
-
-
-editor.addEventListener("keydown", function(e) {
-
-    if (e.key === "Tab") {
-
-        e.preventDefault();
-
-        const start = this.selectionStart;
-        const end = this.selectionEnd;
-
-        this.value =
-            this.value.substring(0, start)
-            + "    "
-            + this.value.substring(end);
-
-        this.selectionStart =
-            this.selectionEnd =
-            start + 4;
-
-    }
-
-
-    if (e.ctrlKey && e.key === "Enter") {
-
-        e.preventDefault();
-
-        runCode();
-
-    }
-
-});
-
-
-// ==========================================================
-// INITIAL EXECUTION
-// ==========================================================
-
-window.onload = runCode;
-
 
 </script>
 
 </body>
-
 </html>
-
 """
 
 
-# ==========================================================
-# ROUTES
-# ==========================================================
+# ============================================================
+# FLASK ROUTES
+# ============================================================
 
 @app.route("/")
-def home():
+def index():
 
     return render_template_string(HTML)
 
@@ -907,7 +869,9 @@ def home():
 @app.route("/run", methods=["POST"])
 def run():
 
-    code = request.json["code"]
+    code = request.json.get("code", "")
+
+    buffer = io.StringIO()
 
     try:
 
@@ -915,7 +879,10 @@ def run():
 
         lexer = Lexer(code)
 
-        tokens = lexer.tokenise()
+        tokens, error = lexer.tokenise()
+
+        if error:
+            raise Exception(error)
 
 
         # Parser
@@ -929,13 +896,8 @@ def run():
 
         evaluator = Evaluator()
 
-        buffer = io.StringIO()
-
         with redirect_stdout(buffer):
-
             evaluator.evaluate(ast)
-
-        output = buffer.getvalue()
 
 
         # Token serialization
@@ -944,9 +906,13 @@ def run():
 
             {
                 "type": str(token.type_),
-                "value": token.token_value,
+
+                "value": str(token.token_value),
+
                 "line": token.line,
+
                 "col": token.col
+
             }
 
             for token in tokens
@@ -961,53 +927,40 @@ def run():
 
         return jsonify({
 
-            "output": output,
+            "output": buffer.getvalue(),
 
             "tokens": token_data,
 
-            "ast": ast_data
+            "ast": ast_data,
+
+            "error": None
 
         })
 
 
-    except (
-
-        InvalidTokenError,
-        UnterminatedStringLiteral,
-        InvalidIdentifier,
-        InvalidFloatLiteral,
-        UnintialisedStringLiteral
-
-    ) as e:
+    except Exception as error:
 
         return jsonify({
 
-            "output": str(e),
+            "output": buffer.getvalue(),
 
             "tokens": [],
 
-            "ast": None
+            "ast": None,
+
+            "error": str(error)
 
         })
 
 
-    except Exception as e:
-
-        return jsonify({
-
-            "output": "Internal Error:\\n" + str(e),
-
-            "tokens": [],
-
-            "ast": None
-
-        })
-
-
-# ==========================================================
-# MAIN
-# ==========================================================
+# ============================================================
+# START SERVER
+# ============================================================
 
 if __name__ == "__main__":
 
-    app.run(debug=True)
+    app.run(
+        debug=True,
+        host="0.0.0.0",
+        port=5000
+    )
