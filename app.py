@@ -14,51 +14,122 @@ from src.scanner import (
 from src.parser import Parser
 from src.interpreter import Evaluator
 
+
 app = Flask(__name__)
 
+
+# ==========================================================
+# AST SERIALIZER
+# ==========================================================
 
 def serialize_ast(node):
 
     if node is None:
-        return None
-
-    if isinstance(node, (str, int, float, bool)):
-        return node
-
-    if isinstance(node, list):
-        return [
-            serialize_ast(item)
-            for item in node
-        ]
-
-    if isinstance(node, tuple):
-        return [
-            serialize_ast(item)
-            for item in node
-        ]
-
-    # Handle token objects
-    if hasattr(node, "token_type") and hasattr(node, "token_value"):
         return {
-            "type": "Token",
-            "value": str(node.token_value),
-            "token_type": str(node.token_type)
+            "name": "None",
+            "value": None,
+            "children": []
         }
 
+    # Lists
+    if isinstance(node, (list, tuple)):
+
+        return {
+            "name": "Sequence",
+            "children": [
+                {
+                    "name": f"[{index}]",
+                    **serialize_ast(item)
+                }
+                for index, item in enumerate(node)
+            ]
+        }
+
+    # Token objects
+    if hasattr(node, "type_") and hasattr(node, "token_value"):
+
+        return {
+            "name": "Token: " + str(node.type_),
+            "value": node.token_value,
+            "attributes": {
+                "line": node.line,
+                "column": node.col
+            },
+            "children": []
+        }
+
+    # Primitive values
+    if isinstance(node, (str, int, float, bool)):
+
+        return {
+            "name": str(node),
+            "value": node,
+            "children": []
+        }
+
+    # AST nodes
     if hasattr(node, "__dict__"):
 
+        children = []
+
+        for key, value in vars(node).items():
+
+            # Nested AST nodes or tokens
+            if hasattr(value, "__dict__"):
+
+                children.append({
+                    "name": key,
+                    **serialize_ast(value)
+                })
+
+            # Lists and tuples
+            elif isinstance(value, (list, tuple)):
+
+                children.append({
+                    "name": key,
+                    **serialize_ast(value)
+                })
+
+            # Dictionaries
+            elif isinstance(value, dict):
+
+                children.append({
+                    "name": key,
+                    "children": [
+                        {
+                            "name": str(k),
+                            **serialize_ast(v)
+                        }
+                        for k, v in value.items()
+                    ]
+                })
+
+            # Primitive attributes
+            else:
+
+                children.append({
+                    "name": key,
+                    "value": value,
+                    "children": []
+                })
+
         return {
-            "type": type(node).__name__,
-            "children": {
-                key: serialize_ast(value)
-                for key, value in vars(node).items()
-            }
+            "name": type(node).__name__,
+            "children": children
         }
 
-    return str(node)
+    return {
+        "name": str(node),
+        "children": []
+    }
 
+
+# ==========================================================
+# HTML
+# ==========================================================
 
 HTML = """
+
 <!DOCTYPE html>
 <html>
 
@@ -75,7 +146,8 @@ HTML = """
 }
 
 body {
-    max-width: 1200px;
+
+    max-width: 1100px;
     margin: auto;
     padding: 20px;
 
@@ -84,6 +156,7 @@ body {
 
     font-family: sans-serif;
     font-size: 17px;
+
 }
 
 h1 {
@@ -97,6 +170,7 @@ h2 {
 }
 
 textarea {
+
     width: 100%;
     height: 300px;
 
@@ -112,6 +186,7 @@ textarea {
     font-size: 16px;
 
     resize: vertical;
+
 }
 
 textarea:focus {
@@ -120,6 +195,7 @@ textarea:focus {
 }
 
 button {
+
     background: #2563eb;
     color: white;
 
@@ -132,6 +208,7 @@ button {
     margin: 5px;
 
     font-size: 15px;
+
 }
 
 button:hover {
@@ -139,6 +216,7 @@ button:hover {
 }
 
 pre {
+
     background: #1e293b;
 
     border: 1px solid #334155;
@@ -152,76 +230,136 @@ pre {
     font-family: monospace;
     font-size: 14px;
 
-    min-height: 40px;
 }
 
-#ast-container {
 
-    background: #111c32;
+/* TOKEN TABLE */
 
-    border: 1px solid #334155;
-    border-radius: 10px;
+#tokens-container {
 
-    width: 100%;
-    height: 600px;
-
-    overflow: hidden;
-
-    position: relative;
-}
-
-#ast-container svg {
-    width: 100%;
-    height: 100%;
-}
-
-.node rect {
-    stroke-width: 1.5px;
-    rx: 8;
-}
-
-.node text {
-    font-size: 13px;
-    fill: white;
-    text-anchor: middle;
-    pointer-events: none;
-}
-
-.link {
-    fill: none;
-    stroke: #64748b;
-    stroke-width: 2px;
-}
-
-.node {
-    cursor: pointer;
-}
-
-.node:hover rect {
-    stroke: white;
-    stroke-width: 2.5px;
-}
-
-#node-info {
-
-    margin-top: 15px;
-
-    padding: 15px;
+    overflow-x: auto;
 
     background: #1e293b;
 
     border: 1px solid #334155;
     border-radius: 10px;
 
+}
+
+.token-table {
+
+    width: 100%;
+    border-collapse: collapse;
+
     font-family: monospace;
     font-size: 14px;
 
-    min-height: 50px;
-    overflow-wrap: anywhere;
 }
 
-.controls {
-    margin: 10px 0;
+.token-table th,
+.token-table td {
+
+    padding: 11px;
+
+    border-bottom: 1px solid #334155;
+
+    text-align: left;
+
+}
+
+.token-table th {
+
+    color: #93c5fd;
+    background: #172554;
+
+}
+
+.token-table tr:hover {
+    background: #334155;
+}
+
+
+/* AST */
+
+#ast-container {
+
+    width: 100%;
+    height: 650px;
+
+    background: #111c32;
+
+    border: 1px solid #334155;
+    border-radius: 10px;
+
+    overflow: hidden;
+
+}
+
+#ast-container svg {
+    display: block;
+}
+
+.link {
+
+    fill: none;
+
+    stroke: #64748b;
+    stroke-width: 2px;
+
+}
+
+.node {
+    cursor: pointer;
+}
+
+.node rect {
+
+    stroke: #94a3b8;
+    stroke-width: 1.5px;
+
+    rx: 8;
+
+}
+
+.node text {
+
+    fill: white;
+
+    font-size: 12px;
+
+    text-anchor: middle;
+
+    pointer-events: none;
+
+}
+
+.node:hover rect {
+
+    stroke: white;
+    stroke-width: 2.5px;
+
+}
+
+
+/* INSPECTOR */
+
+#node-info {
+
+    background: #1e293b;
+
+    border: 1px solid #334155;
+    border-radius: 10px;
+
+    padding: 15px;
+
+    font-family: monospace;
+    font-size: 14px;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    min-height: 60px;
+
 }
 
 </style>
@@ -231,13 +369,14 @@ pre {
 
 <body>
 
+
 <h1>San Playground</h1>
 
 <p>Write and execute San programs.</p>
 
 
 <textarea id="code">
-//Please keep the numbers small since this is executing on a browser.
+// Please keep the numbers small.
 
 func fib(n){
 
@@ -253,7 +392,8 @@ stdout(fib(10))
 </textarea>
 
 
-<br>
+<br><br>
+
 
 <button onclick="runCode()">
 Run - CTRL + ENTER
@@ -267,18 +407,19 @@ Run - CTRL + ENTER
 
 <h2>Tokens</h2>
 
-<pre id="tokens"></pre>
+<div id="tokens-container"></div>
 
 
 <h2>Abstract Syntax Tree</h2>
 
-<div class="controls">
 
-    <button onclick="zoomIn()">Zoom In</button>
+<div>
 
-    <button onclick="zoomOut()">Zoom Out</button>
+<button onclick="zoomIn()">Zoom In</button>
 
-    <button onclick="resetZoom()">Reset View</button>
+<button onclick="zoomOut()">Zoom Out</button>
+
+<button onclick="resetZoom()">Reset View</button>
 
 </div>
 
@@ -290,26 +431,24 @@ Run - CTRL + ENTER
 
 <div id="node-info">
 
-Click an AST node to inspect its properties.
+Click an AST node to inspect it.
 
 </div>
 
 
+
 <script>
 
-let currentTransform = d3.zoomIdentity;
 
+// ==========================================================
+// RUN CODE
+// ==========================================================
 
 async function runCode() {
 
-    const code =
-        document.getElementById("code").value;
+    const code = document.getElementById("code").value;
 
-    const output =
-        document.getElementById("output");
-
-    const tokens =
-        document.getElementById("tokens");
+    const output = document.getElementById("output");
 
     output.innerText = "Running...";
 
@@ -333,29 +472,98 @@ async function runCode() {
 
         output.innerText = data.output;
 
-        tokens.innerText = data.tokens;
+        renderTokens(data.tokens);
 
-        if (data.ast) {
-            renderAST(data.ast);
-        } else {
-            document.getElementById(
-                "ast-container"
-            ).innerHTML = "";
-        }
+        renderAST(data.ast);
 
     }
 
     catch (error) {
 
-        output.innerText =
-            "Request Error: " + error;
+        output.innerText = "Request Error: " + error;
 
     }
 
 }
 
 
+
+// ==========================================================
+// TOKEN RENDERER
+// ==========================================================
+
+function renderTokens(tokens) {
+
+    const container =
+        document.getElementById("tokens-container");
+
+    container.innerHTML = "";
+
+    if (!tokens || tokens.length === 0) {
+        container.innerText = "No tokens.";
+        return;
+    }
+
+    const table = document.createElement("table");
+
+    table.className = "token-table";
+
+    const thead = document.createElement("thead");
+
+    thead.innerHTML = `
+        <tr>
+            <th>#</th>
+            <th>Type</th>
+            <th>Value</th>
+            <th>Line</th>
+            <th>Column</th>
+        </tr>
+    `;
+
+    const tbody = document.createElement("tbody");
+
+    tokens.forEach((token, index) => {
+
+        const row = document.createElement("tr");
+
+        const values = [
+            index,
+            token.type,
+            token.value ?? "—",
+            token.line,
+            token.col ?? "—"
+        ];
+
+        values.forEach(value => {
+
+            const cell = document.createElement("td");
+
+            cell.textContent = value;
+
+            row.appendChild(cell);
+
+        });
+
+        tbody.appendChild(row);
+
+    });
+
+    table.appendChild(thead);
+
+    table.appendChild(tbody);
+
+    container.appendChild(table);
+
+}
+
+
+
+// ==========================================================
 // AST RENDERER
+// ==========================================================
+
+let svg;
+let zoom;
 
 function renderAST(ast) {
 
@@ -363,6 +571,9 @@ function renderAST(ast) {
         document.getElementById("ast-container");
 
     container.innerHTML = "";
+
+    document.getElementById("node-info").innerText =
+        "Click an AST node to inspect it.";
 
     if (!ast) {
         return;
@@ -372,114 +583,24 @@ function renderAST(ast) {
     const height = container.clientHeight;
 
 
-    // Convert serialized AST into D3 hierarchy
+    // Create hierarchy
 
-    function convert(node, name = "Root") {
-
-        if (node === null || node === undefined) {
-
-            return {
-                name: name + ": null",
-                data: node
-            };
-
-        }
-
-        if (Array.isArray(node)) {
-
-            return {
-                name: name,
-                data: node,
-                children: node.map(
-                    (item, index) =>
-                        convert(item, "[" + index + "]")
-                )
-            };
-
-        }
-
-        if (typeof node === "object") {
-
-            if (node.type === "Token") {
-
-                return {
-                    name: "Token: " + node.value,
-                    data: node
-                };
-
-            }
-
-            const children = [];
-
-            if (node.type) {
-
-                Object.entries(node.children || {})
-                    .forEach(([key, value]) => {
-
-                        children.push(
-                            convert(value, key)
-                        );
-
-                    });
-
-                return {
-
-                    name: node.type,
-
-                    data: node,
-
-                    children: children
-
-                };
-
-            }
-
-            Object.entries(node).forEach(
-                ([key, value]) => {
-
-                    children.push(
-                        convert(value, key)
-                    );
-
-                }
-            );
-
-            return {
-                name: name,
-                data: node,
-                children: children
-            };
-
-        }
-
-        return {
-
-            name: name + ": " + String(node),
-
-            data: node
-
-        };
-
-    }
-
-
-    const hierarchy = d3.hierarchy(
-        convert(ast)
-    );
+    const root = d3.hierarchy(ast);
 
 
     // Tree layout
 
     const tree = d3.tree()
-        .nodeSize([180, 110]);
+        .nodeSize([190, 115]);
 
-    tree(hierarchy);
+    tree(root);
 
 
-    const nodes = hierarchy.descendants();
+    const nodes = root.descendants();
+    const links = root.links();
 
-    const links = hierarchy.links();
 
+    // Calculate dimensions
 
     const minX = d3.min(nodes, d => d.x);
     const maxX = d3.max(nodes, d => d.x);
@@ -496,43 +617,44 @@ function renderAST(ast) {
     );
 
 
-    const svg = d3.select(container)
+    // SVG
+
+    svg = d3.select(container)
         .append("svg")
         .attr("width", svgWidth)
         .attr("height", svgHeight);
 
 
-    const zoomLayer = svg.append("g");
+    const layer = svg.append("g");
 
 
-    const zoom = d3.zoom()
-        .scaleExtent([0.2, 3])
+    // Zoom behaviour
+
+    zoom = d3.zoom()
+        .scaleExtent([0.15, 3])
         .on("zoom", event => {
 
-            zoomLayer.attr(
+            layer.attr(
                 "transform",
                 event.transform
             );
 
-            currentTransform = event.transform;
-
         });
-
 
     svg.call(zoom);
 
 
-    // Center tree
+    // Position tree
 
-    zoomLayer.attr(
+    layer.attr(
         "transform",
-        "translate(" + (svgWidth / 2) + ",60)"
+        `translate(${svgWidth / 2}, 60)`
     );
 
 
     // Connectors
 
-    zoomLayer.selectAll(".link")
+    layer.selectAll(".link")
 
         .data(links)
 
@@ -554,9 +676,39 @@ function renderAST(ast) {
         });
 
 
+    // Node colours
+
+    function getColor(name) {
+
+        if (name.includes("Program"))
+            return "#be185d";
+
+        if (name.includes("Number"))
+            return "#2563eb";
+
+        if (name.includes("Binary"))
+            return "#7c3aed";
+
+        if (name.includes("Func"))
+            return "#0891b2";
+
+        if (name.includes("If"))
+            return "#b45309";
+
+        if (name.includes("While"))
+            return "#047857";
+
+        if (name.includes("Token"))
+            return "#475569";
+
+        return "#334155";
+
+    }
+
+
     // Nodes
 
-    const node = zoomLayer.selectAll(".node")
+    const node = layer.selectAll(".node")
 
         .data(nodes)
 
@@ -572,41 +724,20 @@ function renderAST(ast) {
         );
 
 
-    function nodeColor(d) {
-
-        const name = d.data.name;
-
-        if (name.includes("Number")) return "#2563eb";
-
-        if (name.includes("Binary")) return "#7c3aed";
-
-        if (name.includes("Func")) return "#0891b2";
-
-        if (name.includes("If")) return "#b45309";
-
-        if (name.includes("While")) return "#047857";
-
-        if (name.includes("Program")) return "#be185d";
-
-        return "#334155";
-
-    }
-
-
     node.append("rect")
 
-        .attr("x", -70)
+        .attr("x", -75)
 
         .attr("y", -25)
 
-        .attr("width", 140)
+        .attr("width", 150)
 
         .attr("height", 50)
 
-        .attr("fill", d => nodeColor(d))
+        .attr("fill", d => getColor(d.data.name));
 
-        .attr("stroke", "#94a3b8");
 
+    // Node labels
 
     node.append("text")
 
@@ -614,36 +745,37 @@ function renderAST(ast) {
 
         .text(d => {
 
-            const name = d.data.name;
+            let name = d.data.name;
 
-            return name.length > 20
-                ? name.substring(0, 18) + "..."
+            if (d.data.value !== undefined &&
+                d.data.value !== null) {
+
+                name += ": " + d.data.value;
+
+            }
+
+            return name.length > 23
+                ? name.substring(0, 20) + "..."
                 : name;
 
         });
 
 
-    // Node inspector
+    // Inspector
 
     node.on("click", function(event, d) {
 
-        const info =
-            document.getElementById("node-info");
-
-        info.innerText = JSON.stringify(
-            d.data,
-            null,
-            4
-        );
+        document.getElementById("node-info").innerText =
+            JSON.stringify(d.data, null, 4);
 
     });
 
 
-    // Fit tree initially
+    // Initial positioning
 
-    const initialScale = Math.min(
+    const scale = Math.min(
         1,
-        width / (svgWidth + 100)
+        width / svgWidth
     );
 
     const initialTransform = d3.zoomIdentity
@@ -653,8 +785,7 @@ function renderAST(ast) {
             60
         )
 
-        .scale(initialScale);
-
+        .scale(scale);
 
     svg.call(
         zoom.transform,
@@ -664,41 +795,55 @@ function renderAST(ast) {
 }
 
 
+
+// ==========================================================
+// ZOOM CONTROLS
+// ==========================================================
+
 function zoomIn() {
 
-    d3.select("#ast-container svg")
-        .transition()
-        .call(
-            d3.zoom().scaleBy,
-            1.2
-        );
+    if (!svg || !zoom) return;
+
+    svg.transition()
+        .call(zoom.scaleBy, 1.3);
 
 }
 
 
 function zoomOut() {
 
-    d3.select("#ast-container svg")
-        .transition()
-        .call(
-            d3.zoom().scaleBy,
-            0.8
-        );
+    if (!svg || !zoom) return;
+
+    svg.transition()
+        .call(zoom.scaleBy, 0.7);
 
 }
 
 
 function resetZoom() {
 
-    runCode();
+    if (!svg || !zoom) return;
+
+    svg.transition()
+        .call(
+            zoom.transform,
+            d3.zoomIdentity.translate(
+                document.getElementById(
+                    "ast-container"
+                ).clientWidth / 2,
+                60
+            )
+        );
 
 }
 
 
-// Keyboard shortcuts
 
-const editor =
-    document.getElementById("code");
+// ==========================================================
+// KEYBOARD SHORTCUTS
+// ==========================================================
+
+const editor = document.getElementById("code");
 
 
 editor.addEventListener("keydown", function(e) {
@@ -733,14 +878,25 @@ editor.addEventListener("keydown", function(e) {
 });
 
 
+// ==========================================================
+// INITIAL EXECUTION
+// ==========================================================
+
 window.onload = runCode;
+
 
 </script>
 
 </body>
+
 </html>
+
 """
 
+
+# ==========================================================
+# ROUTES
+# ==========================================================
 
 @app.route("/")
 def home():
@@ -755,13 +911,21 @@ def run():
 
     try:
 
+        # Lexer
+
         lexer = Lexer(code)
 
         tokens = lexer.tokenise()
 
+
+        # Parser
+
         parser = Parser(tokens)
 
         ast = parser.parse()
+
+
+        # Evaluator
 
         evaluator = Evaluator()
 
@@ -773,15 +937,35 @@ def run():
 
         output = buffer.getvalue()
 
+
+        # Token serialization
+
+        token_data = [
+
+            {
+                "type": str(token.type_),
+                "value": token.token_value,
+                "line": token.line,
+                "col": token.col
+            }
+
+            for token in tokens
+
+        ]
+
+
+        # AST serialization
+
+        ast_data = serialize_ast(ast)
+
+
         return jsonify({
 
             "output": output,
 
-            "tokens": "\n".join(
-                map(str, tokens)
-            ),
+            "tokens": token_data,
 
-            "ast": serialize_ast(ast)
+            "ast": ast_data
 
         })
 
@@ -800,7 +984,7 @@ def run():
 
             "output": str(e),
 
-            "tokens": "",
+            "tokens": [],
 
             "ast": None
 
@@ -813,12 +997,16 @@ def run():
 
             "output": "Internal Error:\\n" + str(e),
 
-            "tokens": "",
+            "tokens": [],
 
             "ast": None
 
         })
 
+
+# ==========================================================
+# MAIN
+# ==========================================================
 
 if __name__ == "__main__":
 
