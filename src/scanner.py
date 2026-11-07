@@ -1,9 +1,8 @@
 #scanner.py
-#===========================================================================================
-#A lexer goes through each character and classifies each of them as their respective type of tokens
-#===========================================================================================
 
-#--------------------------------------------------------------------------------------
+#A lexer goes through each character and classifies each of them as their respective type of tokens
+
+
 #---Token Types----------------------------------------------------
 #The definitions are categorised based on their type
 #------------------------------------------------------------------
