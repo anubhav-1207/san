@@ -27,7 +27,10 @@ class MutableTupleError(Exception):
     def __init__(self,tuple,line,col):
         super().__init__(f"class source.fatal:: environment tuple {tuple.token_value} found to be mutable, cannot initialise mutable tuples,\n\t\t---> parser exited with error[#PAR004], line:col {line}:{col}")
 
-
+class MalformedTupleError(Exception):
+    def __init__(self,line,col):
+        super().__init__(f"class source.fatal:: environment tuple is malformed, cannot initialise tuple,\n\t\t---> parser exited with error[#PAR005], line:col {line}:{col}")
+        
 #---Parser Class---------------------------------------------------------------------
 class Parser:
     def __init__(self,tokens):
@@ -118,29 +121,34 @@ class Parser:
             self.advance()
             return StringLiteral(value)
         
-        #---LPAREN------------------------------
+        #---LPAREN---------------------------
         elif self.match([TT_LPAREN]):
             self.advance()
 
-            #---Expressions inside parenthesis---------------------------------------------
-            if self.peek().type_ != TT_COMMA:
-                expression_node = self.parse_logical_or()
+            if self.current_token and self.current_token.type_ == TT_RPAREN:
                 self.expect([TT_RPAREN])
-                return expression_node
+                return TupleLiteralNode([])
 
-            #---Tuples----------------------------------------------------------------------
+            first_parsed = self.parse_logical_or()
+
+            if self.current_token and self.current_token.type_ != TT_COMMA:
+                self.expect([TT_RPAREN])
+                return first_parsed
+            
             else:
-                elements = []
-
-                if self.current_token and self.current_token.type_ != TT_RPAREN:
-                    elements.append(self.parse_logical_or())
-                    while self.current_token and self.current_token.type_ == TT_COMMA:
-                        self.expect([TT_COMMA])
-                        elements.append(self.parse_logical_or())
-
+                elements = [first_parsed]
+                
+                while self.current_token and self.current_token.type_ != TT_RPAREN:
+                    self.expect([TT_COMMA]) #correct 
+                    if self.current_token and self.current_token.type_ != TT_RPAREN: #if there is no RPAREN that means there are more commas so continue parsing
+                        if self.current_token and self.current_token.type_ != TT_COMMA:
+                            elements.append(self.parse_logical_or())
+                        else:
+                            raise MalformedTupleError(self.current_token.line,self.current_token.col)
+                
                 self.expect([TT_RPAREN])
                 return TupleLiteralNode(elements)
-
+                
 
         #---NULL---------------------------------
         elif self.current_token and self.current_token.token_value == 'Null':
@@ -300,11 +308,11 @@ class Parser:
                 else:
                     self.expect([TT_EQ])
 
-                if self.current_token.token_value != '(':
+                if self.current_token.token_value:
                     var_value_node= self.parse_comp_expr()
                     return VarAssignNode(var_name_token,var_value_node,is_const)
-                else:
-                    raise MutableTupleError(var_name_token,self.current_token.line,self.current_token.col)
+                # else:
+                #     raise MutableTupleError(var_name_token,self.current_token.line,self.current_token.col)
 
         #---IF and ELSE--------------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'if':

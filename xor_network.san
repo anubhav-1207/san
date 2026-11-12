@@ -25,9 +25,9 @@ func train_step(
     dec output = sigmoid(hidden1 * w5 + hidden2 * w6 + b3)
 
     // Backpropagation deltas
-    dec output_delta = (target - output) * output * (1 - output)
-    dec hidden1_delta = hidden1 * (1 - hidden1) * w5 * output_delta
-    dec hidden2_delta = hidden2 * (1 - hidden2) * w6 * output_delta
+    const  output_delta = (target - output) * output * (1 - output)
+    const hidden1_delta = hidden1 * (1 - hidden1) * w5 * output_delta
+    const hidden2_delta = hidden2 * (1 - hidden2) * w6 * output_delta
 
     // Return updated parameters in a fixed order.
     return [
@@ -129,7 +129,7 @@ dec result_01 = sigmoid(sigmoid(w2 + b1) * w5 + sigmoid(w4 + b2) * w6 + b3)
 dec result_10 = sigmoid(sigmoid(w1 + b1) * w5 + sigmoid(w3 + b2) * w6 + b3)
 dec result_11 = sigmoid(sigmoid(w1 + w2 + b1) * w5 + sigmoid(w3 + w4 + b2) * w6 + b3)
 
-stdout("XOR predictions (expected: 0, 1, 1, 0):")
+stdout("XOR predictions:")
 stdout(result_00)
 stdout(result_01)
 stdout(result_10)
