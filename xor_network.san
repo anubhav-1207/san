@@ -1,0 +1,136 @@
+// XOR neural network: 2 inputs -> 2 hidden neurons -> 1 output.
+// Trained with backpropagation and the sigmoid activation function.
+//
+// This example deliberately avoids indexed element assignment.
+// Arrays are only used to return the updated weights from train_step().
+//
+// Requires San's "/" operator to perform floating-point division.
+
+use math
+
+func sigmoid(x) {
+    return 1 / (1 + exp(-x))
+}
+
+func train_step(
+    w1, w2, b1,
+    w3, w4, b2,
+    w5, w6, b3,
+    x1, x2, target,
+    rate
+) {
+    // Forward pass
+    dec hidden1 = sigmoid(x1 * w1 + x2 * w2 + b1)
+    dec hidden2 = sigmoid(x1 * w3 + x2 * w4 + b2)
+    dec output = sigmoid(hidden1 * w5 + hidden2 * w6 + b3)
+
+    // Backpropagation deltas
+    dec output_delta = (target - output) * output * (1 - output)
+    dec hidden1_delta = hidden1 * (1 - hidden1) * w5 * output_delta
+    dec hidden2_delta = hidden2 * (1 - hidden2) * w6 * output_delta
+
+    // Return updated parameters in a fixed order.
+    return [
+        w1 + rate * hidden1_delta * x1,
+        w2 + rate * hidden1_delta * x2,
+        b1 + rate * hidden1_delta,
+        w3 + rate * hidden2_delta * x1,
+        w4 + rate * hidden2_delta * x2,
+        b2 + rate * hidden2_delta,
+        w5 + rate * output_delta * hidden1,
+        w6 + rate * output_delta * hidden2,
+        b3 + rate * output_delta
+    ]
+}
+
+// Initial weights and biases.
+// The asymmetric values prevent both hidden neurons from starting identically.
+dec w1 = 0.15
+dec w2 = 0.20
+dec b1 = 0.35
+
+dec w3 = 0.25
+dec w4 = -0.30
+dec b2 = 0.40
+
+dec w5 = 0.40
+dec w6 = -0.45
+dec b3 = 0.50
+
+dec learning_rate = 0.7
+dec updated = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+// Train on all four XOR examples during every epoch.
+for epoch in getrange(0, 10000) {
+    // 0 XOR 0 = 0
+    flux updated = train_step(
+        w1, w2, b1, w3, w4, b2, w5, w6, b3,
+        0, 0, 0, learning_rate
+    )
+    flux w1 = updated[0]
+    flux w2 = updated[1]
+    flux b1 = updated[2]
+    flux w3 = updated[3]
+    flux w4 = updated[4]
+    flux b2 = updated[5]
+    flux w5 = updated[6]
+    flux w6 = updated[7]
+    flux b3 = updated[8]
+
+    // 0 XOR 1 = 1
+    flux updated = train_step(
+        w1, w2, b1, w3, w4, b2, w5, w6, b3,
+        0, 1, 1, learning_rate
+    )
+    flux w1 = updated[0]
+    flux w2 = updated[1]
+    flux b1 = updated[2]
+    flux w3 = updated[3]
+    flux w4 = updated[4]
+    flux b2 = updated[5]
+    flux w5 = updated[6]
+    flux w6 = updated[7]
+    flux b3 = updated[8]
+
+    // 1 XOR 0 = 1
+    flux updated = train_step(
+        w1, w2, b1, w3, w4, b2, w5, w6, b3,
+        1, 0, 1, learning_rate
+    )
+    flux w1 = updated[0]
+    flux w2 = updated[1]
+    flux b1 = updated[2]
+    flux w3 = updated[3]
+    flux w4 = updated[4]
+    flux b2 = updated[5]
+    flux w5 = updated[6]
+    flux w6 = updated[7]
+    flux b3 = updated[8]
+
+    // 1 XOR 1 = 0
+    flux updated = train_step(
+        w1, w2, b1, w3, w4, b2, w5, w6, b3,
+        1, 1, 0, learning_rate
+    )
+    flux w1 = updated[0]
+    flux w2 = updated[1]
+    flux b1 = updated[2]
+    flux w3 = updated[3]
+    flux w4 = updated[4]
+    flux b2 = updated[5]
+    flux w5 = updated[6]
+    flux w6 = updated[7]
+    flux b3 = updated[8]
+}
+
+// Evaluate the trained network.
+dec result_00 = sigmoid(sigmoid(b1) * w5 + sigmoid(b2) * w6 + b3)
+dec result_01 = sigmoid(sigmoid(w2 + b1) * w5 + sigmoid(w4 + b2) * w6 + b3)
+dec result_10 = sigmoid(sigmoid(w1 + b1) * w5 + sigmoid(w3 + b2) * w6 + b3)
+dec result_11 = sigmoid(sigmoid(w1 + w2 + b1) * w5 + sigmoid(w3 + w4 + b2) * w6 + b3)
+
+stdout("XOR predictions (expected: 0, 1, 1, 0):")
+stdout(result_00)
+stdout(result_01)
+stdout(result_10)
+stdout(result_11)
