@@ -3,6 +3,7 @@
 #Walks all the AST nodes and executes them one by one.
 #===================================================================
 from .ast_nodes import *
+from .scanner import Token
 from src.stdlib import *
 from src.stdlib.native_arrays import inject_array_methods
 from src.stdlib.native_string import inject_string_methods
@@ -88,7 +89,7 @@ class Environment:
             self.vars[name.token_value] = (value, is_const)
     
     #---Finds the value of the variable in the given environment/scope-------------------
-    def lookup(self,name):
+    def lookup(self,name:Token):
         """Searches for a variable in the global and parent scope. """
         if name.token_value in self.vars:
             return self.vars[name.token_value][0]
@@ -98,7 +99,7 @@ class Environment:
             raise UndefinedVariable(name,name.line,name.col)
     
     #---Edits the value of a var in the namespace-----------------------------------------
-    def reassign_var(self,name,value):
+    def reassign_var(self,name: Token,value):
         """
         Reassigns the variable if not a constant.
         """
