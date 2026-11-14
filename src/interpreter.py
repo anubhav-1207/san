@@ -2,6 +2,10 @@
 #===================================================================
 #Walks all the AST nodes and executes them one by one.
 #===================================================================
+from __future__ import annotations
+
+from typing import Any, Callable, Optional, TypeAlias
+
 from .ast_nodes import *
 from .scanner import Token
 from src.stdlib import *
@@ -12,52 +16,56 @@ from src.stdlib.native_math import inject_math_methods
 from src.stdlib.native_random import inject_random_methods
 from src.stdlib.native_time import inject_time_methods
 
+FunctionTable: TypeAlias = dict[str, Any]
+RuntimeValue: TypeAlias = Any
+
 #---Error Classes---------------------------------------------------------------
 class AccidentalReassError(Exception): #done
-    def __init__(self,var,line,col):
+    def __init__(self, var: Any, line: int, col: int) -> None:
         super().__init__(f"class source.fatal:: environmental variable '{var}' already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001] line:col {line}:{col}")
 
 class UndefinedVariable(Exception): #done
-    def __init__(self,var,line,col):
-        super().__init__(f"class source.fatal:: environmental variable '{var.token_value}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002] line:col {line}:{col}")
+    def __init__(self, var: Token | str, line: int, col: int) -> None:
+        name = var.token_value if isinstance(var, Token) else var
+        super().__init__(f"class source.fatal:: environmental variable '{name}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002] line:col {line}:{col}")
 
 class ConstantMutation(Exception): #done
-    def __init__(self,var,line,col):
+    def __init__(self, var: Any, line: int, col: int) -> None:
         super().__init__(f"class source.fatal:: environmental constant '{var}' is a constant,even explicit reassignment not allowed,\n\t\t---> interpreter exited with error[#INTRPTR003] line:col {line}:{col}")
 
 class ZeroDivisionError(Exception): #done
-    def __init__(self,right,left,line,col):
+    def __init__(self, right: Any, left: Any, line: int, col: int) -> None:
         super().__init__(f"class source.fatal:: cannot divide by zero, mathematically undefined,\n\t\t---> undefined operation '{right}/{left}' interpreter exited with error[#INTRPTR004] line:col {line}:{col}")
 
 class UndefinedFunc(Exception): #done
-    def __init__(self,var,line,col):
+    def __init__(self, var: Any, line: int, col: int) -> None:
         super().__init__(f"class source.recursive:: function '{var}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR005] line:col {line}:{col}")
 
 class InvalidTypeConv(Exception): #done
-    def __init__(self,var,type_,line,col):
+    def __init__(self, var: Any, type_: Any, line: int, col: int) -> None:
         super().__init__(f"class source.fatal:: variable '{var}' is not of the required type '{type_}', cannot perform implicit type conversion - type mismatch,\n\t\t---> interpreter exited with error[#INTRPTR006] line:col {line}:{col}")
 
 class MalformedTypeOperation(Exception): #done
-    def __init__(self,line,col):
+    def __init__(self, line: int, col: int) -> None:
         super().__init__(f"class source.fatal:: operation is not of the required type, cannot perform operation - supported type operations:\nint + float\nint - float\nint * float\nint / float\nint // float\nint % float\\nint ** float \nbool + int\nbool + float\nstr * int,\n\t\t---> interpreter exited with error[#INTRPTR006] line:col {line}:{col}")
 
 class UnrecognisedBinaryOp(Exception): #done
-    def __init__(self,op,line,col):
+    def __init__(self, op: Any, line: int, col: int) -> None:
         super().__init__(f"class source.non-fatal:: unrecognised binary operator encountered - this error was not even possible to occur, if it did, congratulations, you went horribly wrong somewhere. You're on your own now - '{op}' ,\n\t\t---> interpreter exited with error[#INTRPTR006] line:col {line}:{col}")
 
 class InsufficientFuncArgs(Exception): #done
-    def __init__(self,len_of_params,line,col):
+    def __init__(self, len_of_params: int, line: int, col: int) -> None:
         super().__init__(f"class source.fatal:: in-built function did not received number of specified arguments ({len_of_params}),\n\t\t---> interpreter exited with error[#INTRPTR007] line:col {line}:{col}")
 
 class InvalidLibraryImported(Exception): #done
-    def __init__(self,library,line,col):
+    def __init__(self, library: str, line: int, col: int) -> None:
         super().__init__(f"class source.fatal :: no in-built library found named '{library}',\n\t\t---> interpreter exited with error[#INTRPTR007] line:col {line}:{col}")
 
 class BreakException(Exception):
     pass
 
 class ReturnException(Exception):
-    def __init__(self, value):
+    def __init__(self, value: Any) -> None:
         self.value = value
 #------------------------------------------------------------------------------------
 
@@ -65,10 +73,11 @@ class ReturnException(Exception):
 #---STDLIB built-in Functions--------------------------------------------------------------------------
 class NativeFuncNode:
     """Wrapper for built-ins of various functions"""
-    def __init__(self,name,expected_args,method,is_const):
-        self.name = name 
-        self.expected_args = expected_args
-        self.method = method 
+    def __init__(self, name: str, expected_args: tuple[int, ...], method: Callable[[list[Any]], Any], is_const: bool) -> None:
+        self.name: str = name
+        self.expected_args: tuple[int, ...] = expected_args
+        self.method: Callable[[list[Any]], Any] = method
+        self.is_const: bool = is_const
 
 #---Visitor Nodes------------------------------------------------------------
 class Environment:
@@ -76,30 +85,30 @@ class Environment:
        Create a new scope using new_scope = Environment(parent=current_scope)
        Then use using the following methods using new_scope.define(name,value) to define a variable and so on....
        """
-    def __init__(self,parent=None):
-        self.parent = parent #parent scope
-        self.vars = {} #symbol table to store all variables and their values
+    def __init__(self, parent: Optional["Environment"] = None) -> None:
+        self.parent: Optional[Environment] = parent #parent scope
+        self.vars: dict[str, tuple[Any, bool]] = {} #symbol table to store all variables and their values
 
     #---Enters a value in the namespace-----------------
-    def define(self,name,value,is_const=False):
+    def define(self, name: Token, value: Any, is_const: bool = False) -> None:
         """Adds the variable and its value to namespace."""
         if name.token_value in self.vars:
-            raise AccidentalReassError(name.token_value,name.line,name.col)
+            raise AccidentalReassError(name.token_value, name.line, name.col)
         else:
             self.vars[name.token_value] = (value, is_const)
     
     #---Finds the value of the variable in the given environment/scope-------------------
-    def lookup(self,name:Token):
+    def lookup(self, name: Token) -> Any:
         """Searches for a variable in the global and parent scope. """
         if name.token_value in self.vars:
             return self.vars[name.token_value][0]
         if self.parent:
             return self.parent.lookup(name)
         else:
-            raise UndefinedVariable(name,name.line,name.col)
+            raise UndefinedVariable(name, name.line, name.col)
     
     #---Edits the value of a var in the namespace-----------------------------------------
-    def reassign_var(self,name: Token,value):
+    def reassign_var(self, name: Token, value: Any) -> None:
         """
         Reassigns the variable if not a constant.
         """
@@ -107,19 +116,19 @@ class Environment:
         if name_value in self.vars:
             val, is_const = self.vars[name_value]
             if is_const:
-                raise ConstantMutation(name_value,name.line,name.col)
+                raise ConstantMutation(name_value, name.line, name.col)
             else:
-                self.vars[name_value] = (value,is_const)
+                self.vars[name_value] = (value, is_const)
                 return 
             
         elif self.parent:
-            self.parent.reassign_var(name,value)
+            self.parent.reassign_var(name, value)
             return 
         
         else:
-            raise UndefinedVariable(name,name.line,name.col)
+            raise UndefinedVariable(name, name.line, name.col)
     
-    def update_local(self, name, value):
+    def update_local(self, name: Token, value: Any) -> None:
         """
         Updates a variable in the current scope only.
         """
@@ -136,11 +145,11 @@ class Environment:
 #---Evaluator Class---------------------------------------------------------------------------
 class Evaluator:
     """The main engine of the interpreter that does all the work expected by any interpreter."""
-    def __init__(self):
-        self.global_env = Environment()
-        self.current_env = self.global_env
-        self.functions = {}
-        self.builtInLibraries = ('math','random','time')
+    def __init__(self) -> None:
+        self.global_env: Environment = Environment()
+        self.current_env: Environment = self.global_env
+        self.functions: FunctionTable = {}
+        self.builtInLibraries: tuple[str, ...] = ('math', 'random', 'time')
 
         #---Load in-built methods into the scope-----------
         inject_array_methods(self.functions)
@@ -149,10 +158,10 @@ class Evaluator:
         #--------------------------------------------------
     
     #---Evaluate Func----------------------------
-    def evaluate(self,node):
+    def evaluate(self, node: Any) -> Any:
         """Gets the node name and visits the node."""
         method_name = f"visit_{node.__class__.__name__}"
-        visitor = getattr(self,method_name,None)
+        visitor = getattr(self, method_name, None)
 
         if visitor is None:
             raise Exception(f"No visitor for {node.__class__.__name__}")
@@ -161,15 +170,15 @@ class Evaluator:
     
 #============================================================================
     #---Visitor Nodes-------------------------------------------------
-    def visit_ProgramNode(self,node):
-        result = None
+    def visit_ProgramNode(self, node: Any) -> Any:
+        result: Any = None
 
         for statement in node.statements:
             result = self.evaluate(statement)
 
         return result
 
-    def is_truthy(self,operand) -> bool:
+    def is_truthy(self, operand: Any) -> bool:
         """
         Defining truthy and false operations.
         Returns -> True or False
@@ -181,38 +190,38 @@ class Evaluator:
         else:
             return True
 
-    def visit_NumberNode(self,node):
+    def visit_NumberNode(self, node: Any) -> int | float:
         if '.' in node.number:
             return float(node.number)
         else:
             return int(node.number)
     
-    def visit_StringLiteral(self,node):
+    def visit_StringLiteral(self, node: Any) -> str:
         return node.value
     
-    def visit_BooleanLiteral(self,node):
+    def visit_BooleanLiteral(self, node: Any) -> bool:
         return node.value
     
-    def visit_NullLiteral(self,node):
+    def visit_NullLiteral(self, node: Any) -> None:
         return None 
     
-    def visit_NoneType(self,node):
+    def visit_NoneType(self, node: Any) -> None:
         return None
     
-    def visit_ArrayLiteralNode(self,node):
-        elements = []
+    def visit_ArrayLiteralNode(self, node: Any) -> list[Any]:
+        elements: list[Any] = []
         for el in node.elements:
             elements.append(self.evaluate(el))
         return elements
     
-    def visit_IndexingNode(self,node):
+    def visit_IndexingNode(self, node: Any) -> Any:
         name = node.array
         name_value = node.array.token_value  # get variable name
         array = self.current_env.lookup(name)
         start_index = self.evaluate(node.start_index)
         return array[start_index]
     
-    def visit_SlicingNode(self,node):
+    def visit_SlicingNode(self, node: Any) -> Any:
         name = node.array
         name_value = node.array.token_value #get array name
         array_value = self.current_env.lookup(name)
@@ -221,7 +230,7 @@ class Evaluator:
         steps = self.evaluate(node.steps)
         return array_value[start_index:end_index:steps]
 
-    def visit_UnaryOpNode(self,node):
+    def visit_UnaryOpNode(self, node: Any) -> Any:
         operand = self.evaluate(node.value)
 
         if node.op == "+" or node.op == "":
@@ -231,7 +240,7 @@ class Evaluator:
         elif node.op == "!":
             return not self.is_truthy(operand)
     
-    def visit_BinaryOpNode(self,node):
+    def visit_BinaryOpNode(self, node: Any) -> Any:
         left = self.evaluate(node.left)
         operator = node.op.token_value
         right = self.evaluate(node.right)
@@ -263,76 +272,76 @@ class Evaluator:
             try:
                 return left ** right
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line, node.op.col)
 
         elif operator == '>':
             try:
                 return left > right
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line, node.op.col)
 
         elif operator == '<':
             try:
                 return left < right
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line, node.op.col)
 
         elif operator == '<=':
             try:
                 return left <= right
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line, node.op.col)
 
         elif operator == '>=':
             try:
                 return left >= right
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line, node.op.col)
 
         elif operator == '==':
             try:
                 return left == right
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line, node.op.col)
 
         elif operator == '!=':
             try:
                 return left != right
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line, node.op.col)
 
         elif operator == '&&':
             try:
                 return self.is_truthy(left) and self.is_truthy(right)
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line, node.op.col)
 
         elif operator == '||':
             try:
                 return self.is_truthy(left) or self.is_truthy(right)
             except TypeError:
-                raise MalformedTypeOperation()
+                raise MalformedTypeOperation(node.op.line, node.op.col)
 
         else:
-            raise UnrecognisedBinaryOp(node.op.line,node.op.col)
+            raise UnrecognisedBinaryOp(node.op.token_value, node.op.line, node.op.col)
     
-    def visit_VarAccessNode(self,node):
+    def visit_VarAccessNode(self, node: Any) -> Any:
         return self.current_env.lookup(node.var_name_token)
     
-    def visit_VarAssignNode(self,node):
+    def visit_VarAssignNode(self, node: Any) -> Any:
         name = node.var_name_token
         value = self.evaluate(node.value_node)
         const = node.is_const
-        self.current_env.define(name,value,const)
+        self.current_env.define(name, value, const)
         return value
     
-    def visit_VarReassignNode(self,node):
+    def visit_VarReassignNode(self, node: Any) -> Any:
         name = node.var_name_token
         value = self.evaluate(node.value_node)
-        self.current_env.reassign_var(name,value)
+        self.current_env.reassign_var(name, value)
         return value
     
-    def visit_ScanNode(self,node):
+    def visit_ScanNode(self, node: Any) -> Any:
         user_input = input()
         type_ = node.type_
         
@@ -340,43 +349,45 @@ class Evaluator:
             try:
                 value = int(user_input)
             except ValueError:
-                raise InvalidTypeConv(node.variable,type_,node.variable.line,node.variable.col)
+                raise InvalidTypeConv(node.variable, type_, node.variable.line, node.variable.col)
 
         elif type_ == 'float':
             try:
                 value = float(user_input)
             except ValueError:
-                raise InvalidTypeConv(node.variable,type_)
+                raise InvalidTypeConv(node.variable, type_, node.variable.line, node.variable.col)
 
         elif type_ == 'str':
             try:
                 value = str(user_input)
             except ValueError:
-                raise InvalidTypeConv(node.variable,type_)
+                raise InvalidTypeConv(node.variable, type_, node.variable.line, node.variable.col)
 
         elif type_ == 'bool':
             try:
                 value = bool(user_input)
             except ValueError:
-                raise InvalidTypeConv(node.variable,type_)
+                raise InvalidTypeConv(node.variable, type_, node.variable.line, node.variable.col)
+        else:
+            value = user_input
 
         try:
-            self.current_env.define(node.variable,value)
+            self.current_env.define(node.variable, value)
         except AccidentalReassError:
-            self.current_env.reassign_var(node.variable,value)
+            self.current_env.reassign_var(node.variable, value)
         return value
 
 
-    def visit_IfNode(self,node):
+    def visit_IfNode(self, node: Any) -> Any:
         if_condition = self.evaluate(node.if_condition)
-        elif_condition = self.evaluate(node.elif_condition)
+        elif_condition = self.evaluate(node.elif_condition) if node.elif_condition is not None else None
         if self.is_truthy(if_condition):
-            result = None 
+            result: Any = None 
             for stmt in node.if_body:
                 result = self.evaluate(stmt)
             return result 
         
-        elif self.is_truthy(elif_condition):
+        elif elif_condition is not None and self.is_truthy(elif_condition):
             result = None
             for stmt in node.elif_body:
                 result = self.evaluate(stmt)
@@ -391,8 +402,8 @@ class Evaluator:
         return None
 
 
-    def visit_WhileNode(self,node):
-        result = None
+    def visit_WhileNode(self, node: Any) -> Any:
+        result: Any = None
         try:            
             while self.is_truthy(self.evaluate(node.condition)):
                 for stmt in node.while_body:
@@ -402,19 +413,19 @@ class Evaluator:
         return result
 
 
-    def visit_FuncDefNode(self,node):
+    def visit_FuncDefNode(self, node: Any) -> None:
         self.functions[node.func_name.token_value] = node
         return None
     
-    def visit_FuncCallNode(self, node):
+    def visit_FuncCallNode(self, node: Any) -> Any:
         if node.func_name.token_value not in self.functions:
-            raise UndefinedFunc(node.func_name.token_value,node.func_name.line,node.func_name.col)
+            raise UndefinedFunc(node.func_name.token_value, node.func_name.line, node.func_name.col)
         
         func_def = self.functions[node.func_name.token_value]
         func_env = Environment(parent=self.current_env)
 
         #---Built-in Function Handler------------------------------
-        if hasattr(func_def,'is_native'):
+        if hasattr(func_def, 'is_native'):
             evaluated_args = [self.evaluate(arg) for arg in node.func_args] #turn all the arguments into a list
             if len(evaluated_args) not in func_def.expected_args:
                 line = getattr(func_def, 'line', None)
@@ -422,7 +433,7 @@ class Evaluator:
                 if line is None or col is None:
                     line = node.func_name.line
                     col = node.func_name.col
-                raise InsufficientFuncArgs(func_def.expected_args,line,col)
+                raise InsufficientFuncArgs(len(func_def.expected_args), line, col)
         
             return func_def.method(evaluated_args)
 
@@ -430,8 +441,8 @@ class Evaluator:
         for i, param in enumerate(func_def.func_params):
             try:
                 arg_value = self.evaluate(node.func_args[i])
-            except Exception as e:
-                raise InsufficientFuncArgs(len(func_def.func_params),node.func_name.line,node.func_name.col)
+            except Exception:
+                raise InsufficientFuncArgs(len(func_def.func_params), node.func_name.line, node.func_name.col)
             func_env.define(param, arg_value)
         
         #---Switch Environments/Scopes--------
@@ -439,7 +450,7 @@ class Evaluator:
         self.current_env = func_env
         #-----------------------------------
         
-        result = None
+        result: Any = None
         try:
             for stmt in func_def.func_body:
                 result = self.evaluate(stmt)
@@ -451,16 +462,16 @@ class Evaluator:
         return result
 
 
-    def visit_BreakNode(self,node):
+    def visit_BreakNode(self, node: Any) -> None:
         raise BreakException()
 
 
-    def visit_ReturnNode(self,node):
+    def visit_ReturnNode(self, node: Any) -> Any:
         value = self.evaluate(node.value) if node.value else None
         raise ReturnException(value)
 
 
-    def visit_UseNode(self,node):
+    def visit_UseNode(self, node: Any) -> None:
         library_name = node.library.token_value
 
         if library_name in self.builtInLibraries:
@@ -471,10 +482,10 @@ class Evaluator:
             elif library_name == "time":
                 inject_time_methods(self.functions)
         else:
-            raise InvalidLibraryImported(library_name,node.library.line,node.library.col)
+            raise InvalidLibraryImported(library_name, node.library.line, node.library.col)
     
-    def visit_ForNode(self, node):
-        result = None
+    def visit_ForNode(self, node: Any) -> Any:
+        result: Any = None
 
         variable = node.variable.var_name_token
         iterable = self.evaluate(node.iterable)
@@ -500,7 +511,7 @@ class Evaluator:
         finally:
             self.current_env = previous_env #switch to the previous scope after the loop is done executing
 
-    def visit_TupleLiteralNode(self,node):
+    def visit_TupleLiteralNode(self, node: Any) -> tuple[Any, ...]:
         tuple_ = []
         for elem in node.elements:
             tuple_.append(self.evaluate(elem))
