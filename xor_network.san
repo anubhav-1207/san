@@ -4,12 +4,17 @@
 // This example deliberately avoids indexed element assignment.
 // Arrays are only used to return the updated weights from train_step().
 //
-// Requires San's "/" operator to perform floating-point division.
+// San's "/" operator is floor division, so fdiv() below computes a / b as
+// a * b^-1 to keep the network in floating point.
 
 use math
 
+func fdiv(a, b) {
+    return a * (b ** -1)
+}
+
 func sigmoid(x) {
-    return 1 / (1 + exp(-x))
+    return fdiv(1.0, 1.0 + exp(-x))
 }
 
 func train_step(

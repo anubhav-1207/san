@@ -90,7 +90,7 @@ class Environment:
         if name.token_value in self.vars:
             return self.vars[name.token_value][0]
         if self.parent:
-            return self.parent.lookup(name.token_value)
+            return self.parent.lookup(name)
         else:
             raise UndefinedVariable(name,name.line,name.col)
     
@@ -109,11 +109,11 @@ class Environment:
                 return 
             
         elif self.parent:
-            self.parent.reassign_var(name_value,value)
+            self.parent.reassign_var(name,value)
             return 
         
         else:
-            raise UndefinedVariable(name_value)
+            raise UndefinedVariable(name,name.line,name.col)
 #----------------------------------------------------------------------------------------------
 
 #---Evaluator Class---------------------------------------------------------------------------

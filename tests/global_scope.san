@@ -1,0 +1,13 @@
+// Regression test for global scope access from inside a function.
+// Both reading a global constant and reassigning a global variable should work.
+
+dec score = 10
+const PI = 3.14
+
+func increaseScore() {
+    flux score = score + 5
+    return score + PI
+}
+
+stdout(increaseScore())
+stdout(score)

@@ -1,0 +1,230 @@
+// ============================================================================
+//  A small neural network written from scratch in San.
+//
+//  Architecture:  2 inputs -> 4 hidden neurons -> 1 output
+//  Activation:    sigmoid
+//  Loss:          mean squared error
+//  Training:      online stochastic gradient descent with backpropagation
+//  Task:          XOR
+//
+//  Everything is implemented with plain San values: arrays, functions, loops
+//  and arithmetic. No external machine-learning library is used.
+//
+//  Run it with:
+//      python main.py examples/neural_network.san
+//
+//  A note on division
+//  ------------------
+//  San's `/` operator performs floor division (7 / 2 == 3). Neural networks
+//  need real-valued division, so fdiv() below computes a / b as a * b^-1.
+//  This keeps the network correct without changing the language itself.
+// ============================================================================
+
+use math
+
+//--- Network shape -----------------------------------------------------------
+const INPUTS = 2
+const HIDDEN = 4
+const OUTPUTS = 1
+
+// Parameter layout (a single flat array keeps San's indexing rules simple):
+//
+//   [ W1(0,0) W1(0,1) W1(1,0) W1(1,1) ... ]   HIDDEN * INPUTS values
+//   [ b1(0) b1(1) ... ]                       HIDDEN values
+//   [ W2(0) W2(1) ... ]                       HIDDEN * OUTPUTS values
+//   [ b2 ]                                    1 value
+//
+// Total: HIDDEN * INPUTS + HIDDEN + HIDDEN * OUTPUTS + 1 = 17 values.
+const W1_OFFSET = 0
+const B1_OFFSET = HIDDEN * INPUTS
+const W2_OFFSET = B1_OFFSET + HIDDEN
+const B2_OFFSET = W2_OFFSET + HIDDEN * OUTPUTS
+
+//--- Math helpers ------------------------------------------------------------
+
+// Real (floating point) division. San's `/` is floor division.
+func fdiv(a, b) {
+    return a * (b ** -1)
+}
+
+func sigmoid(x) {
+    return fdiv(1.0, 1.0 + exp(-x))
+}
+
+//--- Forward pass ------------------------------------------------------------
+// Returns [h0, h1, h2, h3, output]. The hidden activations are kept because
+// backpropagation needs them.
+func forward(params, x1, x2) {
+    dec activations = []
+    dec j = 0
+    dec z = 0.0
+
+    // Hidden layer: z_j = x1*W1[j][0] + x2*W1[j][1] + b1[j]
+    while (j < HIDDEN) {
+        flux z = params[W1_OFFSET + j * INPUTS] * x1
+               + params[W1_OFFSET + j * INPUTS + 1] * x2
+               + params[B1_OFFSET + j]
+        append(activations, sigmoid(z))
+        flux j = j + 1
+    }
+
+    // Output layer: z = sum_j h_j * W2[j] + b2
+    dec output_z = params[B2_OFFSET]
+    flux j = 0
+    while (j < HIDDEN) {
+        flux output_z = output_z + params[W2_OFFSET + j] * activations[j]
+        flux j = j + 1
+    }
+
+    append(activations, sigmoid(output_z))
+    return activations
+}
+
+func predict(params, x1, x2) {
+    dec activations = forward(params, x1, x2)
+    return activations[HIDDEN]
+}
+
+//--- Backpropagation for one sample -----------------------------------------
+// Returns a new parameter array after one gradient-descent step.
+func train_sample(params, x1, x2, target, learning_rate) {
+    dec activations = forward(params, x1, x2)
+    dec output = activations[HIDDEN]
+
+    // dL/dz for the output neuron (sigmoid + squared error).
+    dec output_delta = (target - output) * output * (1 - output)
+
+    // dL/dz for every hidden neuron.
+    dec hidden_deltas = []
+    dec j = 0
+    dec h = 0.0
+    while (j < HIDDEN) {
+        flux h = activations[j]
+        append(hidden_deltas, h * (1 - h) * params[W2_OFFSET + j] * output_delta)
+        flux j = j + 1
+    }
+
+    // Build the updated parameter array in the same layout.
+    dec updated = []
+
+    // W1 and b1
+    flux j = 0
+    while (j < HIDDEN) {
+        append(updated, params[W1_OFFSET + j * INPUTS]
+                      + learning_rate * hidden_deltas[j] * x1)
+        append(updated, params[W1_OFFSET + j * INPUTS + 1]
+                      + learning_rate * hidden_deltas[j] * x2)
+        flux j = j + 1
+    }
+    flux j = 0
+    while (j < HIDDEN) {
+        append(updated, params[B1_OFFSET + j] + learning_rate * hidden_deltas[j])
+        flux j = j + 1
+    }
+
+    // W2 and b2
+    flux j = 0
+    while (j < HIDDEN) {
+        append(updated, params[W2_OFFSET + j]
+                      + learning_rate * output_delta * activations[j])
+        flux j = j + 1
+    }
+    append(updated, params[B2_OFFSET] + learning_rate * output_delta)
+
+    return updated
+}
+
+//--- Loss --------------------------------------------------------------------
+func sample_loss(params, x1, x2, target) {
+    dec output = predict(params, x1, x2)
+    dec error = target - output
+    return error * error
+}
+
+func dataset_loss(params, data) {
+    dec total = 0.0
+    for row in data {
+        flux total = total + sample_loss(params, row[0], row[1], row[2])
+    }
+    return fdiv(total, len(data))
+}
+
+//--- Training ----------------------------------------------------------------
+// One pass over the dataset. This lives in its own function because San's
+// `for` declares its loop variable in the surrounding function scope, so a
+// nested `for` cannot be re-entered without redeclaring it.
+func train_epoch(data, params, learning_rate) {
+    dec current = params
+    for row in data {
+        flux current = train_sample(current, row[0], row[1], row[2], learning_rate)
+    }
+    return current
+}
+
+func train(data, initial_params, epochs, learning_rate) {
+    dec params = initial_params
+    dec epoch_loss = 0.0
+
+    for epoch in getrange(0, epochs) {
+        flux params = train_epoch(data, params, learning_rate)
+
+        // Report progress every 1000 epochs (San's `/` is floor division here).
+        if (epoch - (epoch / 1000) * 1000 == 0) {
+            flux epoch_loss = dataset_loss(params, data)
+            stdout("epoch " + setstr(epoch) + "  loss " + setstr(epoch_loss))
+        }
+    }
+
+    return params
+}
+
+//--- XOR dataset -------------------------------------------------------------
+// Each row is [input1, input2, expected output].
+dec xor_data = [
+    [0.0, 0.0, 0.0],
+    [0.0, 1.0, 1.0],
+    [1.0, 0.0, 1.0],
+    [1.0, 1.0, 0.0]
+]
+
+//--- Initial parameters ------------------------------------------------------
+// Deliberately asymmetric so the four hidden neurons start differently.
+dec initial_params = [
+    0.10, -0.20,      // hidden neuron 0: W1
+    0.30,  0.40,      // hidden neuron 1: W1
+   -0.50,  0.60,      // hidden neuron 2: W1
+    0.15, -0.25,      // hidden neuron 3: W1
+    0.35, -0.45,  0.20, -0.30,   // b1
+    0.40, -0.50,  0.25, -0.35,   // W2
+    0.10               // b2
+]
+
+//--- Train -------------------------------------------------------------------
+const EPOCHS = 2000
+const LEARNING_RATE = 0.9
+
+stdout("Training a " + setstr(INPUTS) + "-" + setstr(HIDDEN) + "-" + setstr(OUTPUTS) + " network on XOR")
+dec trained_params = train(xor_data, initial_params, EPOCHS, LEARNING_RATE)
+
+stdout("")
+stdout("Final loss:")
+stdout(dataset_loss(trained_params, xor_data))
+
+stdout("")
+stdout("Predictions: expected -> predicted")
+dec prediction = 0.0
+for sample in xor_data {
+    flux prediction = predict(trained_params, sample[0], sample[1])
+    stdout(setstr(sample[2]) + " -> " + setstr(prediction))
+}
+
+stdout("")
+stdout("Rounded predictions:")
+for sample2 in xor_data {
+    flux prediction = predict(trained_params, sample2[0], sample2[1])
+    if (prediction > 0.5) {
+        stdout(setstr(sample2[0]) + " XOR " + setstr(sample2[1]) + " = 1")
+    } else {
+        stdout(setstr(sample2[0]) + " XOR " + setstr(sample2[1]) + " = 0")
+    }
+}
