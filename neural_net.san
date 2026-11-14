@@ -1,0 +1,249 @@
+use math
+
+// ---------------------------------------------------------------
+// A small multilayer perceptron written from scratch in San.
+// Architecture: 2 inputs -> 4 hidden sigmoid units -> 1 output.
+// Trained with per-sample backpropagation on XOR.
+// ---------------------------------------------------------------
+
+// ---------- math helpers ----------
+
+func sigmoid(x) {
+    // San's "/" is floor division, so use a reciprocal power instead.
+    return (1 + exp(-x)) ** -1
+}
+
+func get2(matrix, i, j) {
+    dec row = matrix[i]
+    return row[j]
+}
+
+func dot(row, vec) {
+    dec total = 0
+    for i in getrange(0, len(row)) {
+        flux total = total + row[i] * vec[i]
+    }
+    return total
+}
+
+func matvec(weights, x) {
+    dec out = []
+    for i in getrange(0, len(weights)) {
+        append(out, dot(weights[i], x))
+    }
+    return out
+}
+
+func addvec(a, b) {
+    dec out = []
+    for i in getrange(0, len(a)) {
+        append(out, a[i] + b[i])
+    }
+    return out
+}
+
+func activate(z) {
+    dec out = []
+    for i in getrange(0, len(z)) {
+        append(out, sigmoid(z[i]))
+    }
+    return out
+}
+
+// ---------- deterministic pseudo-random init ----------
+
+dec rng_state = 0.123456789
+
+func rand01() {
+    flux rng_state = rng_state + 0.6180339887498949
+    dec v = sin(rng_state * 12.9898) * 43758.5453
+    return v - floor(v)
+}
+
+func make_row(n) {
+    dec row = []
+    for j in getrange(0, n) {
+        append(row, (rand01() - 0.5) * 1.0)
+    }
+    return row
+}
+
+func make_layer(n_in, n_out) {
+    dec weights = []
+    dec biases = []
+    dec row = []
+    for i in getrange(0, n_out) {
+        flux row = make_row(n_in)
+        append(weights, row)
+        append(biases, (rand01() - 0.5) * 1.0)
+    }
+    return [weights, biases]
+}
+
+// ---------- forward pass ----------
+
+func layer_forward(layer, x) {
+    dec weights = layer[0]
+    dec biases = layer[1]
+    return activate(addvec(matvec(weights, x), biases))
+}
+
+func forward(net, x) {
+    dec acts = [x]
+    dec a = x
+    for l in getrange(0, len(net)) {
+        flux a = layer_forward(net[l], a)
+        append(acts, a)
+    }
+    return acts
+}
+
+func predict(net, x) {
+    dec acts = forward(net, x)
+    dec out = acts[len(acts) - 1]
+    return out[0]
+}
+
+// ---------- backpropagation ----------
+
+func output_delta(a, y) {
+    dec d = []
+    for i in getrange(0, len(a)) {
+        append(d, (a[i] - y[i]) * a[i] * (1 - a[i]))
+    }
+    return d
+}
+
+func weighted_sum_col(weights, vec, col) {
+    dec total = 0
+    for j in getrange(0, len(vec)) {
+        flux total = total + vec[j] * get2(weights, j, col)
+    }
+    return total
+}
+
+func hidden_delta(weights, delta, a_prev) {
+    dec d = []
+    for i in getrange(0, len(a_prev)) {
+        append(d, weighted_sum_col(weights, delta, i) * a_prev[i] * (1 - a_prev[i]))
+    }
+    return d
+}
+
+func new_row(row, a_prev, d, rate) {
+    dec out = []
+    for j in getrange(0, len(row)) {
+        append(out, row[j] - rate * d * a_prev[j])
+    }
+    return out
+}
+
+func new_bias(biases, delta, rate) {
+    dec out = []
+    for i in getrange(0, len(biases)) {
+        append(out, biases[i] - rate * delta[i])
+    }
+    return out
+}
+
+func update_layer(layer, a_prev, delta, rate) {
+    dec weights = layer[0]
+    dec biases = layer[1]
+    dec new_weights = []
+    dec newrow = []
+    for i in getrange(0, len(weights)) {
+        flux newrow = new_row(weights[i], a_prev, delta[i], rate)
+        append(new_weights, newrow)
+    }
+    return [new_weights, new_bias(biases, delta, rate)]
+}
+
+func train_sample(net, x, y, rate) {
+    dec acts = forward(net, x)
+    dec last = len(net)
+    dec delta = output_delta(acts[last], y)
+    dec new_layers = []
+    dec layer = []
+    dec weights = []
+    dec a_prev = []
+    dec l = 0
+    for idx in getrange(0, last) {
+        flux l = last - 1 - idx
+        flux layer = net[l]
+        flux weights = layer[0]
+        flux a_prev = acts[l]
+        append(new_layers, update_layer(layer, a_prev, delta, rate))
+        if (l > 0) {
+            flux delta = hidden_delta(weights, delta, a_prev)
+        }
+    }
+    return new_layers[::-1]
+}
+
+func train_epoch(net, data, rate) {
+    dec current = net
+    dec sample = []
+    for s in getrange(0, len(data)) {
+        flux sample = data[s]
+        flux current = train_sample(current, [sample[0], sample[1]], [sample[2]], rate)
+    }
+    return current
+}
+
+// ---------- loss ----------
+
+func sample_loss(net, x, y) {
+    dec acts = forward(net, x)
+    dec out = acts[len(acts) - 1]
+    dec total = 0
+    for i in getrange(0, len(out)) {
+        flux total = total + (out[i] - y[i]) * (out[i] - y[i])
+    }
+    return total
+}
+
+func dataset_loss(net, data) {
+    dec total = 0
+    dec sample = []
+    for s in getrange(0, len(data)) {
+        flux sample = data[s]
+        flux total = total + sample_loss(net, [sample[0], sample[1]], [sample[2]])
+    }
+    return total * (len(data) ** -1)
+}
+
+// ---------- train ----------
+
+func train(net, data, epochs, rate) {
+    dec current = net
+    for epoch in getrange(0, epochs) {
+        flux current = train_epoch(current, data, rate)
+        if (epoch == 0 || epoch == 250 || epoch == 500 || epoch == 1000 || epoch == 2000 || epoch == 3999) {
+            stdout("epoch " + setstr(epoch) + " loss " + setstr(dataset_loss(current, data)))
+        }
+    }
+    return current
+}
+
+// ---------- main ----------
+
+dec xor_data = [
+    [0, 0, 0],
+    [0, 1, 1],
+    [1, 0, 1],
+    [1, 1, 0]
+]
+
+dec net = [make_layer(2, 4), make_layer(4, 1)]
+
+stdout("initial loss " + setstr(dataset_loss(net, xor_data)))
+stdout("training ...")
+
+flux net = train(net, xor_data, 4000, 0.7)
+
+stdout("final loss " + setstr(dataset_loss(net, xor_data)))
+stdout("XOR predictions:")
+stdout("0 xor 0 = " + setstr(predict(net, [0, 0])))
+stdout("0 xor 1 = " + setstr(predict(net, [0, 1])))
+stdout("1 xor 0 = " + setstr(predict(net, [1, 0])))
+stdout("1 xor 1 = " + setstr(predict(net, [1, 1])))
