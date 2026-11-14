@@ -114,6 +114,19 @@ class Environment:
         
         else:
             raise UndefinedVariable(name,name.line,name.col)
+    
+    def update_local(self, name, value):
+        """
+        Updates a variable in the current scope only.
+        """
+        name_value = name.token_value
+
+        if name_value in self.vars:
+            _, is_const = self.vars[name_value]
+            self.vars[name_value] = (value, is_const)
+        else:
+            raise UndefinedVariable(name, name.line, name.col)
+            
 #----------------------------------------------------------------------------------------------
 
 #---Evaluator Class---------------------------------------------------------------------------
@@ -456,18 +469,32 @@ class Evaluator:
         else:
             raise InvalidLibraryImported(library_name,node.library.line,node.library.col)
     
-    def visit_ForNode(self,node):
+    def visit_ForNode(self, node):
         result = None
+
         variable = node.variable.var_name_token
         iterable = self.evaluate(node.iterable)
         statements = node.statements
+
+        previous_env = self.current_env #store the current scope so we can switch later
+        loop_env = Environment(parent=previous_env) #create new scope for the loop
         
-        self.current_env.define(variable,None)
-        for i in iterable:
-            for stmt in statements:
-                self.current_env.reassign_var(variable,i)
-                result = self.evaluate(stmt)
-        return result
+        try:
+            self.current_env = loop_env #switch to new scope 
+
+            for i in iterable:
+                if variable.token_value in loop_env.vars: #check if the variable is already defined in the current scope
+                    self.current_env.update_local(variable, i)
+                else: #if not defined, create the variable
+                    self.current_env.define(variable, i)        
+                
+                for stmt in statements: #actually starts executing the loop now
+                    result = self.evaluate(stmt)
+            
+            return result
+        
+        finally:
+            self.current_env = previous_env #switch to the previous scope after the loop is done executing
 
     def visit_TupleLiteralNode(self,node):
         tuple_ = []
