@@ -71,7 +71,10 @@ class NativeFuncNode:
 
 #---Visitor Nodes------------------------------------------------------------
 class Environment:
-    """Creates a namespace to store variables."""
+    """Creates a namespace/environment/scope to store variables.
+       Create a new scope using new_scope = Environment(parent=current_scope)
+       Then use using the following methods using new_scope.define(name,value) to define a variable and so on....
+       """
     def __init__(self,parent=None):
         self.parent = parent #parent scope
         self.vars = {} #symbol table to store all variables and their values
