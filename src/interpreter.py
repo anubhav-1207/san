@@ -239,7 +239,7 @@ class Evaluator:
         
         elif operator == '/':
             if right != 0:
-                return left // right
+                return left / right
             else:
                 raise ZeroDivisionError(right,left,node.op.line,node.op.col)
         elif operator == '**':
