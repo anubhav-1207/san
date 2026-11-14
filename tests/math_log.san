@@ -1,0 +1,7 @@
+// Regression test for the natural logarithm added to the math library.
+
+use math
+
+stdout(log(1.0))
+stdout(log(2.718281828459045))
+stdout(log(0.5))

@@ -26,6 +26,7 @@ from math import ldexp as mathldexp
 from math import sqrt as mathsqrt
 from math import pow as mathpow
 from math import exp as mathexp
+from math import log as mathlog
 from math import expm1 as mathexpm1
 
 from math import degrees as mathdegrees
@@ -82,6 +83,7 @@ def inject_math_methods(function_table,modules=None):
     function_table["sqrt"] = NativeFuncNode("sqrt",(1,),sqrt)
     function_table["power"] = NativeFuncNode("power",(2,),power)
     function_table["exp"] = NativeFuncNode("expm",(1,),exp)
+    function_table["log"] = NativeFuncNode("log",(1,),log)
     function_table["degrees"] = NativeFuncNode("degrees",(1,),degrees)
     function_table["radians"] = NativeFuncNode("radians",(1,),radians)
     function_table["sinh"] = NativeFuncNode("sinh",(1,),sinh)
@@ -197,6 +199,11 @@ def exp(args):
     """Return e raised to the power of the first argument."""
     x = args[0]
     return mathexp(x)
+
+def log(args):
+    """Return the natural logarithm of the first argument."""
+    x = args[0]
+    return mathlog(x)
 
 def expm1(args):
     """Return e**x - (1,) for the first argument."""

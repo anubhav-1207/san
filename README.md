@@ -180,13 +180,15 @@ You can check the `/tests` directory for more examples, files with the prefix "i
 
 A complete neural network, written from scratch with San arrays, loops and
 functions, lives in [`examples/neural_network.san`](examples/neural_network.san).
-It trains a `2 -> 4 -> 1` sigmoid network on XOR with backpropagation:
+It is a generic multi-layer perceptron that trains a `3 -> 4 -> 1` sigmoid
+network on 3-bit parity with backpropagation and binary cross-entropy:
 
 ```bash
 python main.py examples/neural_network.san
 ```
 
-The implementation is explained in
+Change the `LAYERS` array at the top of the file to try another shape, such as
+`[3, 6, 4, 1]`. The implementation is explained in
 [`docs/neural-network.md`](docs/neural-network.md).
 
 # Architecture 
