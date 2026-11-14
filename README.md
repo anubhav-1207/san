@@ -178,6 +178,17 @@ stdout("Many more functions!!!");
 # Examples 
 You can check the `/tests` directory for more examples, files with the prefix "inv" are just to test the security features and will emit errors.
 
+A complete neural network, written from scratch with San arrays, loops and
+functions, lives in [`examples/neural_network.san`](examples/neural_network.san).
+It trains a `2 -> 4 -> 1` sigmoid network on XOR with backpropagation:
+
+```bash
+python main.py examples/neural_network.san
+```
+
+The implementation is explained in
+[`docs/neural-network.md`](docs/neural-network.md).
+
 # Architecture 
 San consists of the following core components: 
 - **Lexer**: To generate tokens from the raw source code.
