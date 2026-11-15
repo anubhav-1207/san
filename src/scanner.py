@@ -200,7 +200,7 @@ class Lexer:
             if text in KEYWORDS:
                 self.add(TT_KEYWORD,self.line,text)
             elif text in ("True","False"):
-                self.add(TT_BOOL,self.line,text)
+                self.add(TT_BOOL,self.line,text == "True") # text == True converts the text into actual boolean 
             else:
                 self.add(TT_IDENT,self.line,text)
 

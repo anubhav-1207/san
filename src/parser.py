@@ -308,7 +308,7 @@ class Parser:
                 else:
                     self.expect([TT_EQ])
 
-                if self.current_token.token_value:
+                if self.current_token is not None:
                     var_value_node= self.parse_comp_expr()
                     return VarAssignNode(var_name_token,var_value_node,is_const)
                 # else:
