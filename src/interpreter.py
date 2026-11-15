@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import Any, Callable, Optional, TypeAlias
 
 from .ast_nodes import *
-from .scanner import Token
+from .scanner import Tokens
 from src.stdlib import *
 from src.stdlib.native_arrays import inject_array_methods
 from src.stdlib.native_string import inject_string_methods
@@ -25,8 +25,8 @@ class AccidentalReassError(Exception): #done
         super().__init__(f"class source.fatal:: environmental variable '{var}' already found, explicit reassignment expected,\n\t\t---> interpreter exited with error[#INTRPTR001] line:col {line}:{col}")
 
 class UndefinedVariable(Exception): #done
-    def __init__(self, var: Token | str, line: int, col: int) -> None:
-        name = var.token_value if isinstance(var, Token) else var
+    def __init__(self, var: Tokens | str, line: int, col: int) -> None:
+        name = var.token_value if isinstance(var, Tokens) else var
         super().__init__(f"class source.fatal:: environmental variable '{name}' is not defined, explicit definition expected,\n\t\t---> interpreter exited with error[#INTRPTR002] line:col {line}:{col}")
 
 class ConstantMutation(Exception): #done
@@ -90,7 +90,7 @@ class Environment:
         self.vars: dict[str, tuple[Any, bool]] = {} #symbol table to store all variables and their values
 
     #---Enters a value in the namespace-----------------
-    def define(self, name: Token, value: Any, is_const: bool = False) -> None:
+    def define(self, name: Tokens, value: Any, is_const: bool = False) -> None:
         """Adds the variable and its value to namespace."""
         if name.token_value in self.vars:
             raise AccidentalReassError(name.token_value, name.line, name.col)
@@ -98,7 +98,7 @@ class Environment:
             self.vars[name.token_value] = (value, is_const)
     
     #---Finds the value of the variable in the given environment/scope-------------------
-    def lookup(self, name: Token) -> Any:
+    def lookup(self, name: Tokens) -> Any:
         """Searches for a variable in the global and parent scope. """
         if name.token_value in self.vars:
             return self.vars[name.token_value][0]
@@ -108,7 +108,7 @@ class Environment:
             raise UndefinedVariable(name, name.line, name.col)
     
     #---Edits the value of a var in the namespace-----------------------------------------
-    def reassign_var(self, name: Token, value: Any) -> None:
+    def reassign_var(self, name: Tokens, value: Any) -> None:
         """
         Reassigns the variable if not a constant.
         """
@@ -128,7 +128,7 @@ class Environment:
         else:
             raise UndefinedVariable(name, name.line, name.col)
     
-    def update_local(self, name: Token, value: Any) -> None:
+    def update_local(self, name: Tokens, value: Any) -> None:
         """
         Updates a variable in the current scope only.
         """
@@ -200,7 +200,7 @@ class Evaluator:
         return node.value
     
     def visit_BooleanLiteral(self, node: Any) -> bool:
-        return node.value
+        return bool(node.value)
     
     def visit_NullLiteral(self, node: Any) -> None:
         return None 
