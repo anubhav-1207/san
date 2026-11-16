@@ -1,0 +1,1115 @@
+// ============================================================================
+//  SAN-16  --  a 16-bit CPU emulator written in San
+// ============================================================================
+//
+//  Architecture
+//  ------------
+//    * 16 general purpose 16-bit registers, R0..R15 (R15 is the stack pointer)
+//    * 64K x 16-bit word-addressable memory, lazily allocated
+//    * fixed 32-bit instructions made of two 16-bit words:
+//          word 0 : [ opcode:8 ][ rd:4 ][ rs:4 ]
+//          word 1 : [ immediate / address / offset : 16 ]
+//    * arithmetic, signed/unsigned compare, logic, shifts, rotates
+//    * memory load/store with base+offset addressing
+//    * stack, CALL/RET, conditional branches, signed and unsigned
+//    * decimal / hex / character / C-string output, buffered line output
+//    * non-interactive input stream, random and clock instructions
+//
+//  This file is a library.  The assembler (tools/sanasm.py) appends a
+//  PROGRAM image and a call to boot(PROGRAM, INPUT) to produce a runnable
+//  .san file.
+// ============================================================================
+
+use math
+use random
+use time
+
+// ---------------------------------------------------------------------------
+//  Constants
+// ---------------------------------------------------------------------------
+const WORD = 65536
+const MASK16 = 65535
+const SIGN16 = 32768
+const STACK_TOP = 4095
+
+// San string literals reject (), [] and {} inside the text, so printable
+// ASCII is built from safe chunks.  The two bracket pairs that *can* be made
+// are recovered from Python's list/tuple repr through setstr().
+const PARENS = setstr(())
+const BRACKETS = setstr([])
+const CHARS_SP = ' !"#$%&'
+const CHARS_P1 = '*+,-./0123456789:;<=>?@'
+const CHARS_UP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+const CHARS_HI = '^_`'
+const CHARS_LO = 'abcdefghijklmnopqrstuvwxyz'
+const APOS = "'"
+const BSLASH = '\'
+const HEXDIGITS = "0123456789ABCDEF"
+
+// ---------------------------------------------------------------------------
+//  Global CPU state
+// ---------------------------------------------------------------------------
+dec REGS = []
+dec MEM = []
+dec PC = 0
+dec FLAG_Z = 0
+dec FLAG_C = 0
+dec FLAG_N = 0
+dec FLAG_V = 0
+dec RUNNING = 1
+dec EXIT_CODE = 0
+dec OUTBUF = setstr("")
+dec INPUT_DATA = []
+dec INPUT_POS = 0
+dec INSTR_COUNT = 0
+
+// ---------------------------------------------------------------------------
+//  Small arithmetic helpers
+// ---------------------------------------------------------------------------
+
+// Wrap a value into 0..65535.  The first two tests are the fast paths.
+func u16(x) {
+    if (x >= 0 && x < WORD) {
+        return x
+    }
+    if (x < 0 && x >= -WORD) {
+        return x + WORD
+    }
+    return x - floor(x / WORD) * WORD
+}
+
+// Interpret a 16-bit value as a signed integer.
+func s16(x) {
+    if (x >= SIGN16) {
+        return x - WORD
+    }
+    return x
+}
+
+// Positive modulo (b must be non-zero).
+func mod(a, b) {
+    if (b == 0) {
+        return 0
+    }
+    return a - floor(a / b) * b
+}
+
+// ---------------------------------------------------------------------------
+//  Bit operations (San has no native bitwise operators, so build them from
+//  division and modulo -- exactly what the first CPUs did in software).
+// ---------------------------------------------------------------------------
+func band(a, b) {
+    dec x = u16(a)
+    dec y = u16(b)
+    dec r = 0
+    dec bit = 1
+    dec i = 0
+    dec xd = 0
+    dec yd = 0
+    while (i < 16) {
+        flux xd = mod(x, 2)
+        flux yd = mod(y, 2)
+        if (xd == 1 && yd == 1) {
+            flux r = r + bit
+        }
+        flux x = floor(x / 2)
+        flux y = floor(y / 2)
+        flux bit = bit * 2
+        flux i = i + 1
+    }
+    return r
+}
+
+func bor(a, b) {
+    dec x = u16(a)
+    dec y = u16(b)
+    dec r = 0
+    dec bit = 1
+    dec i = 0
+    dec xd = 0
+    dec yd = 0
+    while (i < 16) {
+        flux xd = mod(x, 2)
+        flux yd = mod(y, 2)
+        if (xd == 1 || yd == 1) {
+            flux r = r + bit
+        }
+        flux x = floor(x / 2)
+        flux y = floor(y / 2)
+        flux bit = bit * 2
+        flux i = i + 1
+    }
+    return r
+}
+
+func bxor(a, b) {
+    dec x = u16(a)
+    dec y = u16(b)
+    dec r = 0
+    dec bit = 1
+    dec i = 0
+    dec xd = 0
+    dec yd = 0
+    while (i < 16) {
+        flux xd = mod(x, 2)
+        flux yd = mod(y, 2)
+        if (xd != yd) {
+            flux r = r + bit
+        }
+        flux x = floor(x / 2)
+        flux y = floor(y / 2)
+        flux bit = bit * 2
+        flux i = i + 1
+    }
+    return r
+}
+
+func bnot(a) {
+    return MASK16 - u16(a)
+}
+
+func shl(a, n) {
+    if (n < 0) {
+        return 0
+    }
+    if (n >= 16) {
+        return 0
+    }
+    return u16(u16(a) * (2 ** n))
+}
+
+func shr(a, n) {
+    if (n < 0) {
+        return 0
+    }
+    if (n >= 16) {
+        return 0
+    }
+    return floor(u16(a) / (2 ** n))
+}
+
+// Arithmetic shift right (sign preserving).
+func asr(a, n) {
+    if (n < 0) {
+        return 0
+    }
+    if (n >= 16) {
+        if (s16(u16(a)) < 0) {
+            return MASK16
+        }
+        return 0
+    }
+    return u16(floor(s16(u16(a)) / (2 ** n)))
+}
+
+func rol(a, n) {
+    dec k = mod(n, 16)
+    if (k == 0) {
+        return u16(a)
+    }
+    return u16(shl(a, k) + shr(a, 16 - k))
+}
+
+func ror(a, n) {
+    dec k = mod(n, 16)
+    if (k == 0) {
+        return u16(a)
+    }
+    return u16(shr(a, k) + shl(a, 16 - k))
+}
+
+// ---------------------------------------------------------------------------
+//  Flags
+// ---------------------------------------------------------------------------
+func flags_logic(v) {
+    flux FLAG_Z = 0
+    if (v == 0) {
+        flux FLAG_Z = 1
+    }
+    flux FLAG_N = 0
+    if (v >= SIGN16) {
+        flux FLAG_N = 1
+    }
+    flux FLAG_C = 0
+    flux FLAG_V = 0
+}
+
+func flags_add(a, b, r) {
+    dec sa = s16(u16(a))
+    dec sb = s16(u16(b))
+    dec sr = s16(u16(r))
+    flux FLAG_Z = 0
+    if (r == 0) {
+        flux FLAG_Z = 1
+    }
+    flux FLAG_N = 0
+    if (r >= SIGN16) {
+        flux FLAG_N = 1
+    }
+    flux FLAG_C = 0
+    if ((u16(a) + u16(b)) > MASK16) {
+        flux FLAG_C = 1
+    }
+    flux FLAG_V = 0
+    if (sa >= 0 && sb >= 0 && sr < 0) {
+        flux FLAG_V = 1
+    }
+    if (sa < 0 && sb < 0 && sr >= 0) {
+        flux FLAG_V = 1
+    }
+}
+
+func flags_sub(a, b, r) {
+    dec sa = s16(u16(a))
+    dec sb = s16(u16(b))
+    dec sr = s16(u16(r))
+    flux FLAG_Z = 0
+    if (r == 0) {
+        flux FLAG_Z = 1
+    }
+    flux FLAG_N = 0
+    if (r >= SIGN16) {
+        flux FLAG_N = 1
+    }
+    flux FLAG_C = 0
+    if (u16(a) < u16(b)) {
+        flux FLAG_C = 1
+    }
+    flux FLAG_V = 0
+    if (sa >= 0 && sb < 0 && sr < 0) {
+        flux FLAG_V = 1
+    }
+    if (sa < 0 && sb >= 0 && sr >= 0) {
+        flux FLAG_V = 1
+    }
+}
+
+// ---------------------------------------------------------------------------
+//  Memory and register access
+//
+//  San cannot assign to an array element.  A memory cell is therefore a
+//  one-element array: mem[addr] returns the cell, and del+append mutate the
+//  cell in place.  This keeps reads and writes O(1).
+// ---------------------------------------------------------------------------
+func mem_read(addr) {
+    if (addr >= len(MEM)) {
+        return 0
+    }
+    dec c = MEM[addr]
+    return c[0]
+}
+
+func mem_write(addr, value) {
+    dec n = len(MEM)
+    while (n <= addr) {
+        append(MEM, [0])
+        flux n = n + 1
+    }
+    dec c = MEM[addr]
+    del(c, 0)
+    append(c, u16(value))
+    return value
+}
+
+func reg_get(i) {
+    dec c = REGS[i]
+    return c[0]
+}
+
+func reg_set(i, value) {
+    dec c = REGS[i]
+    del(c, 0)
+    append(c, u16(value))
+    return value
+}
+
+// ---------------------------------------------------------------------------
+//  Output
+// ---------------------------------------------------------------------------
+func char_of(c) {
+    if (c == 32 || (c >= 33 && c <= 38)) {
+        return CHARS_SP[c - 32]
+    }
+    if (c == 39) {
+        return APOS
+    }
+    if (c == 40) {
+        return PARENS[0]
+    }
+    if (c == 41) {
+        return PARENS[1]
+    }
+    if (c >= 42 && c <= 64) {
+        return CHARS_P1[c - 42]
+    }
+    if (c >= 65 && c <= 90) {
+        return CHARS_UP[c - 65]
+    }
+    if (c == 91) {
+        return BRACKETS[0]
+    }
+    if (c == 92) {
+        return BSLASH
+    }
+    if (c == 93) {
+        return BRACKETS[1]
+    }
+    if (c >= 94 && c <= 96) {
+        return CHARS_HI[c - 94]
+    }
+    if (c >= 97 && c <= 122) {
+        return CHARS_LO[c - 97]
+    }
+    if (c == 124) {
+        return "|"
+    }
+    if (c == 126) {
+        return "~"
+    }
+    return "."
+}
+
+func flush() {
+    if (len(OUTBUF) > 0) {
+        stdout(OUTBUF)
+        flux OUTBUF = ""
+    }
+}
+
+func emit_char(c) {
+    if (c == 10) {
+        if (len(OUTBUF) > 0) {
+            flush()
+        } else {
+            stdout("")
+        }
+        return 0
+    }
+    if (c == 13) {
+        return 0
+    }
+    if (c == 9) {
+        flux OUTBUF = OUTBUF + "    "
+        return 0
+    }
+    flux OUTBUF = OUTBUF + char_of(c)
+    if (len(OUTBUF) >= 120) {
+        flush()
+    }
+    return 0
+}
+
+func print_string(addr) {
+    dec p = u16(addr)
+    dec ch = mem_read(p)
+    while (ch != 0) {
+        emit_char(ch)
+        flux p = u16(p + 1)
+        flux ch = mem_read(p)
+    }
+}
+
+func print_hex(value) {
+    flush()
+    dec v = u16(value)
+    dec s = "0x"
+    dec shift = 12
+    dec nib = 0
+    while (shift >= 0) {
+        flux nib = floor(v / (2 ** shift))
+        flux nib = mod(nib, 16)
+        flux s = s + HEXDIGITS[nib]
+        flux shift = shift - 4
+    }
+    stdout(s)
+}
+
+// ---------------------------------------------------------------------------
+//  Instruction execution
+// ---------------------------------------------------------------------------
+func step() {
+    dec pc0 = PC
+    dec w0 = 0
+    dec w1 = 0
+    if (pc0 < len(MEM)) {
+        dec c0 = MEM[pc0]
+        flux w0 = c0[0]
+    }
+    if (pc0 + 1 < len(MEM)) {
+        dec c1 = MEM[pc0 + 1]
+        flux w1 = c1[0]
+    }
+    flux PC = u16(pc0 + 2)
+
+    dec op = floor(w0 / 256)
+    dec rest = w0 - op * 256
+    dec rd = floor(rest / 16)
+    dec rs = rest - rd * 16
+    dec imm = w1
+
+    // ---- hot instructions (inlined register/memory access) --------------
+    if (op == 3) {                              // LDI rd, imm
+        dec rc = REGS[rd]
+        del(rc, 0)
+        append(rc, imm)
+        return 1
+    }
+
+    if (op == 2) {                              // MOV rd, rs
+        dec csrc = REGS[rs]
+        dec v = csrc[0]
+        dec cdst = REGS[rd]
+        del(cdst, 0)
+        append(cdst, v)
+        return 1
+    }
+
+    if (op == 6) {                              // ADD rd, rs
+        dec ca = REGS[rd]
+        dec a = ca[0]
+        dec cb = REGS[rs]
+        dec b = cb[0]
+        dec r = u16(a + b)
+        del(ca, 0)
+        append(ca, r)
+        flags_add(a, b, r)
+        return 1
+    }
+
+    if (op == 8) {                              // SUB rd, rs
+        dec ca = REGS[rd]
+        dec a = ca[0]
+        dec cb = REGS[rs]
+        dec b = cb[0]
+        dec r = u16(a - b)
+        del(ca, 0)
+        append(ca, r)
+        flags_sub(a, b, r)
+        return 1
+    }
+
+    if (op == 7) {                              // ADDI rd, imm
+        dec ca = REGS[rd]
+        dec a = ca[0]
+        dec r = u16(a + imm)
+        del(ca, 0)
+        append(ca, r)
+        flags_add(a, imm, r)
+        return 1
+    }
+
+    if (op == 9) {                              // SUBI rd, imm
+        dec ca = REGS[rd]
+        dec a = ca[0]
+        dec r = u16(a - imm)
+        del(ca, 0)
+        append(ca, r)
+        flags_sub(a, imm, r)
+        return 1
+    }
+
+    if (op == 4) {                              // LD rd, [rs+imm]
+        dec cb = REGS[rs]
+        dec addr = u16(cb[0] + imm)
+        dec v = 0
+        if (addr < len(MEM)) {
+            dec cm = MEM[addr]
+            flux v = cm[0]
+        }
+        dec cd = REGS[rd]
+        del(cd, 0)
+        append(cd, v)
+        return 1
+    }
+
+    if (op == 5) {                              // ST [rd+imm], rs
+        dec cb = REGS[rd]
+        dec addr = u16(cb[0] + imm)
+        dec cv = REGS[rs]
+        dec v = u16(cv[0])
+        dec n = len(MEM)
+        while (n <= addr) {
+            append(MEM, [0])
+            flux n = n + 1
+        }
+        dec cm = MEM[addr]
+        del(cm, 0)
+        append(cm, v)
+        return 1
+    }
+
+    if (op == 29) {                             // CMP rd, rs
+        dec ca = REGS[rd]
+        dec a = ca[0]
+        dec cb = REGS[rs]
+        dec b = cb[0]
+        flags_sub(a, b, u16(a - b))
+        return 1
+    }
+
+    if (op == 30) {                             // CMPI rd, imm
+        dec ca = REGS[rd]
+        dec a = ca[0]
+        flags_sub(a, imm, u16(a - imm))
+        return 1
+    }
+
+    if (op == 36) {                             // JMP imm
+        flux PC = imm
+        return 1
+    }
+
+    if (op == 37) {                             // JZ imm
+        if (FLAG_Z == 1) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 38) {                             // JNZ imm
+        if (FLAG_Z == 0) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 32) {                             // INC rd
+        dec ca = REGS[rd]
+        dec a = ca[0]
+        dec r = u16(a + 1)
+        del(ca, 0)
+        append(ca, r)
+        flags_add(a, 1, r)
+        return 1
+    }
+
+    if (op == 33) {                             // DEC rd
+        dec ca = REGS[rd]
+        dec a = ca[0]
+        dec r = u16(a - 1)
+        del(ca, 0)
+        append(ca, r)
+        flags_sub(a, 1, r)
+        return 1
+    }
+
+    if (op == 10) {                             // MUL rd, rs
+        dec r = u16(reg_get(rd) * reg_get(rs))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 12) {                             // DIV rd, rs
+        dec b = reg_get(rs)
+        if (b == 0) {
+            reg_set(rd, 0)
+            flux FLAG_C = 1
+            flux FLAG_V = 1
+            flux FLAG_Z = 1
+            flux FLAG_N = 0
+            return 1
+        }
+        dec r = floor(reg_get(rd) / b)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 14) {                             // MOD rd, rs
+        dec b = reg_get(rs)
+        if (b == 0) {
+            reg_set(rd, 0)
+            flux FLAG_C = 1
+            flux FLAG_V = 1
+            flux FLAG_Z = 1
+            flux FLAG_N = 0
+            return 1
+        }
+        dec r = mod(reg_get(rd), b)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 45) {                             // CALL imm
+        dec sp = u16(reg_get(15) - 1)
+        reg_set(15, sp)
+        mem_write(sp, PC)
+        flux PC = imm
+        return 1
+    }
+
+    if (op == 46) {                             // RET
+        dec sp = reg_get(15)
+        flux PC = mem_read(sp)
+        reg_set(15, u16(sp + 1))
+        return 1
+    }
+
+    if (op == 47) {                             // PUSH rs
+        dec sp = u16(reg_get(15) - 1)
+        reg_set(15, sp)
+        mem_write(sp, reg_get(rs))
+        return 1
+    }
+
+    if (op == 48) {                             // POP rd
+        dec sp = reg_get(15)
+        reg_set(rd, mem_read(sp))
+        reg_set(15, u16(sp + 1))
+        return 1
+    }
+
+    if (op == 49) {                             // OUT rs (decimal)
+        flush()
+        stdout(reg_get(rs))
+        return 1
+    }
+
+    if (op == 50) {                             // OUTI imm (decimal)
+        flush()
+        stdout(imm)
+        return 1
+    }
+
+    if (op == 51) {                             // OUTC rs (character)
+        emit_char(reg_get(rs))
+        return 1
+    }
+
+    if (op == 52) {                             // OUTS rd (NUL terminated)
+        print_string(reg_get(rd))
+        return 1
+    }
+
+    if (op == 53) {                             // OUTH rs (hex)
+        print_hex(reg_get(rs))
+        return 1
+    }
+
+    if (op == 54) {                             // IN rd
+        dec v = 0
+        if (INPUT_POS < len(INPUT_DATA)) {
+            flux v = INPUT_DATA[INPUT_POS]
+            flux INPUT_POS = INPUT_POS + 1
+        }
+        reg_set(rd, v)
+        return 1
+    }
+
+    if (op == 55) {                             // RAND rd
+        reg_set(rd, randint(0, 65535))
+        return 1
+    }
+
+    if (op == 56) {                             // TIME rd (seconds, low 16 bits)
+        reg_set(rd, mod(setint(time()), WORD))
+        return 1
+    }
+
+    if (op == 71) {                             // JMPR rs
+        flux PC = reg_get(rs)
+        return 1
+    }
+    if (op == 72) {                             // CALLR rs
+        dec target = reg_get(rs)
+        dec sp = u16(reg_get(15) - 1)
+        reg_set(15, sp)
+        mem_write(sp, PC)
+        flux PC = target
+        return 1
+    }
+    if (op == 73) {                             // ADDC rd, rs
+        dec a = reg_get(rd)
+        dec b = reg_get(rs)
+        dec c = 0
+        if (FLAG_C == 1) { flux c = 1 }
+        dec total = a + b + c
+        dec r = u16(total)
+        reg_set(rd, r)
+        flags_add(a, b + c, r)
+        flux FLAG_C = 0
+        if (total > MASK16) {
+            flux FLAG_C = 1
+        }
+        return 1
+    }
+    if (op == 74) {                             // SUBC rd, rs
+        dec a = reg_get(rd)
+        dec b = reg_get(rs)
+        dec c = 0
+        if (FLAG_C == 1) { flux c = 1 }
+        dec borrow = b + c
+        dec r = u16(a - borrow)
+        reg_set(rd, r)
+        flags_sub(a, borrow, r)
+        flux FLAG_C = 0
+        if (a < borrow) {
+            flux FLAG_C = 1
+        }
+        return 1
+    }
+    if (op == 75) {                             // ROLI rd, imm
+        dec r = rol(reg_get(rd), imm)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+    if (op == 76) {                             // RORI rd, imm
+        dec r = ror(reg_get(rd), imm)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+    if (op == 77) {                             // SHRSI rd, imm
+        dec r = asr(reg_get(rd), imm)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+    if (op == 78) {                             // PUSHI imm
+        dec sp = u16(reg_get(15) - 1)
+        reg_set(15, sp)
+        mem_write(sp, imm)
+        return 1
+    }
+    if (op == 70) {                             // DBG
+        flush()
+        stdout("PC=")
+        print_hex(PC)
+        stdout(" ZCNV=")
+        stdout(FLAG_Z)
+        stdout(FLAG_C)
+        stdout(FLAG_N)
+        stdout(FLAG_V)
+        dec i = 0
+        while (i < 16) {
+            print_hex(reg_get(i))
+            flux i = i + 1
+        }
+        return 1
+    }
+
+    if (op == 1) {                              // HALT imm
+        flux EXIT_CODE = imm
+        flux RUNNING = 0
+        return 1
+    }
+
+    if (op == 0) {                              // NOP
+        return 1
+    }
+
+    if (op == 11) {                             // MULI rd, imm
+        dec r = u16(reg_get(rd) * imm)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 13) {                             // DIVI rd, imm
+        if (imm == 0) {
+            reg_set(rd, 0)
+            flux FLAG_C = 1
+            flux FLAG_V = 1
+            flux FLAG_Z = 1
+            flux FLAG_N = 0
+            return 1
+        }
+        dec r = floor(reg_get(rd) / imm)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 15) {                             // MODI rd, imm
+        dec r = 0
+        if (imm != 0) {
+            flux r = mod(reg_get(rd), imm)
+        } else {
+            flux FLAG_C = 1
+            flux FLAG_V = 1
+        }
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 16) {                             // AND rd, rs
+        dec r = band(reg_get(rd), reg_get(rs))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 17) {                             // ANDI rd, imm
+        dec r = band(reg_get(rd), imm)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 18) {                             // OR rd, rs
+        dec r = bor(reg_get(rd), reg_get(rs))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 19) {                             // ORI rd, imm
+        dec r = bor(reg_get(rd), imm)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 20) {                             // XOR rd, rs
+        dec r = bxor(reg_get(rd), reg_get(rs))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 21) {                             // XORI rd, imm
+        dec r = bxor(reg_get(rd), imm)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 22) {                             // NOT rd
+        dec r = bnot(reg_get(rd))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 23) {                             // SHL rd, rs
+        dec r = shl(reg_get(rd), reg_get(rs))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 24) {                             // SHLI rd, imm
+        dec r = shl(reg_get(rd), imm)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 25) {                             // SHR rd, rs
+        dec r = shr(reg_get(rd), reg_get(rs))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 26) {                             // SHRI rd, imm
+        dec r = shr(reg_get(rd), imm)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 27) {                             // ROL rd, rs
+        dec r = rol(reg_get(rd), reg_get(rs))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 28) {                             // ROR rd, rs
+        dec r = ror(reg_get(rd), reg_get(rs))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 31) {                             // TST rd, rs
+        flags_logic(band(reg_get(rd), reg_get(rs)))
+        return 1
+    }
+
+    if (op == 34) {                             // NEG rd
+        dec a = reg_get(rd)
+        dec r = u16(0 - a)
+        reg_set(rd, r)
+        flags_sub(0, a, r)
+        return 1
+    }
+
+    if (op == 35) {                             // SWAP rd, rs
+        dec a = reg_get(rd)
+        dec b = reg_get(rs)
+        reg_set(rd, b)
+        reg_set(rs, a)
+        return 1
+    }
+
+    if (op == 39) {                             // JC imm
+        if (FLAG_C == 1) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 40) {                             // JNC imm
+        if (FLAG_C == 0) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 41) {                             // JN imm
+        if (FLAG_N == 1) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 42) {                             // JP imm
+        if (FLAG_N == 0) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 43) {                             // JV imm
+        if (FLAG_V == 1) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 44) {                             // JNV imm
+        if (FLAG_V == 0) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 57) {                             // CLF
+        flux FLAG_Z = 0
+        flux FLAG_C = 0
+        flux FLAG_N = 0
+        flux FLAG_V = 0
+        return 1
+    }
+
+    if (op == 58) {                             // DIVS rd, rs (signed)
+        dec b = s16(reg_get(rs))
+        if (b == 0) {
+            reg_set(rd, 0)
+            flux FLAG_C = 1
+            flux FLAG_V = 1
+            flux FLAG_Z = 1
+            flux FLAG_N = 0
+            return 1
+        }
+        dec r = u16(setint(s16(reg_get(rd)) / b))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 59) {                             // MODS rd, rs (signed)
+        dec b = s16(reg_get(rs))
+        if (b == 0) {
+            reg_set(rd, 0)
+            flux FLAG_C = 1
+            flux FLAG_V = 1
+            flux FLAG_Z = 1
+            flux FLAG_N = 0
+            return 1
+        }
+        dec aa = s16(reg_get(rd))
+        dec q = setint(aa / b)
+        dec r = u16(aa - q * b)
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 60) {                             // SHRS rd, rs (arithmetic)
+        dec r = asr(reg_get(rd), reg_get(rs))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 61) {                             // MULH rd, rs (high word)
+        dec r = u16(floor((reg_get(rd) * reg_get(rs)) / WORD))
+        reg_set(rd, r)
+        flags_logic(r)
+        return 1
+    }
+
+    if (op == 62) {                             // JLE imm (signed)
+        if (FLAG_Z == 1 || FLAG_N != FLAG_V) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 63) {                             // JGT imm (signed)
+        if (FLAG_Z == 0 && FLAG_N == FLAG_V) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 64) {                             // JGE imm (signed)
+        if (FLAG_N == FLAG_V) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 65) {                             // JLT imm (signed)
+        if (FLAG_N != FLAG_V) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 66) {                             // JBE imm (unsigned)
+        if (FLAG_C == 1 || FLAG_Z == 1) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 67) {                             // JA imm (unsigned)
+        if (FLAG_C == 0 && FLAG_Z == 0) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 68) {                             // JAE imm (unsigned)
+        if (FLAG_C == 0) { flux PC = imm }
+        return 1
+    }
+
+    if (op == 69) {                             // JB imm (unsigned)
+        if (FLAG_C == 1) { flux PC = imm }
+        return 1
+    }
+}
+
+func run() {
+    while (RUNNING == 1) {
+        step()
+        flux INSTR_COUNT = INSTR_COUNT + 1
+    }
+}
+
+// ---------------------------------------------------------------------------
+//  Boot
+// ---------------------------------------------------------------------------
+func boot(program, input) {
+    flux REGS = []
+    flux MEM = []
+    dec i = 0
+    while (i < 16) {
+        append(REGS, [0])
+        flux i = i + 1
+    }
+    reg_set(15, STACK_TOP)
+
+    dec addr = 0
+    while (addr < len(program)) {
+        mem_write(addr, program[addr])
+        flux addr = addr + 1
+    }
+
+    flux INPUT_DATA = input
+    flux INPUT_POS = 0
+    flux PC = 0
+    flux RUNNING = 1
+    flux EXIT_CODE = 0
+    flux OUTBUF = ""
+    flux INSTR_COUNT = 0
+    flux FLAG_Z = 0
+    flux FLAG_C = 0
+    flux FLAG_N = 0
+    flux FLAG_V = 0
+
+    run()
+    flush()
+    return EXIT_CODE
+}
