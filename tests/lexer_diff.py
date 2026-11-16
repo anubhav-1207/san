@@ -41,6 +41,8 @@ def c_tokens(source):
 
     result = []
     for line in proc.stdout.splitlines():
+        if not line.startswith("Token("):
+            continue
         match = TOKEN_RE.match(line)
         if match is None:
             raise AssertionError(f"unrecognised token line: {line!r}")
@@ -178,8 +180,8 @@ def check_multi_error():
         Path(path).unlink()
 
     lines = proc.stderr.splitlines()
-    codes = [re.search(r"\[#?(LEX\d+)\]", line) for line in lines]
-    names = [match.group(1) if match else None for match in codes]
+    codes = [re.search(r"error\[#(LEX\d+)\]", line) for line in lines]
+    names = [match.group(1) for match in codes if match]
     if names != ["LEX001", "LEX002", "LEX004"]:
         print(f"FAIL multi-error ordering: {names}")
         print(proc.stderr, end="")

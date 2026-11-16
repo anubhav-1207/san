@@ -28,7 +28,8 @@ static const CodeInfo CODE_INFO[ERR_COUNT] = {
     [ERR_INTRPTR004] = {"INTRPTR004", "source.fatal",     SEVERITY_ERROR,   SECURITY_MEDIUM},
     [ERR_INTRPTR005] = {"INTRPTR005", "source.recursive", SEVERITY_FATAL,   SECURITY_HIGH},
     [ERR_INTRPTR006] = {"INTRPTR006", "source.fatal",     SEVERITY_ERROR,   SECURITY_MEDIUM},
-    [ERR_INTRPTR007] = {"INTRPTR007", "source.fatal",     SEVERITY_ERROR,   SECURITY_HIGH}
+    [ERR_INTRPTR007] = {"INTRPTR007", "source.fatal",     SEVERITY_ERROR,   SECURITY_HIGH},
+    [ERR_INTRPTR008] = {"INTRPTR008", "source.recursive", SEVERITY_ERROR,   SECURITY_HIGH}
 };
 
 static const char *const SEVERITY_NAMES[] = {"FATAL", "ERROR", "WARNING", "INFO"};
@@ -91,6 +92,9 @@ bool diags_has_errors(const Diagnostics *diags) {
     for (size_t i = 0; i < diags->count; i++) {
         Severity severity = CODE_INFO[diags->items[i].code].severity;
         if (severity == SEVERITY_FATAL || severity == SEVERITY_ERROR) {
+            return true;
+        }
+        if (diags->items[i].phase == SAN_PHASE_INTERPRETER) {
             return true;
         }
     }
