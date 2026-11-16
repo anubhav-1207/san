@@ -1,0 +1,52 @@
+; Sieve of Eratosthenes up to 200, printing every prime.
+; This is the "real work" demo: nested loops, indexed memory, branches.
+
+        .org 0
+        LDI   R1, 200        ; limit
+        LDI   R2, 0x0400     ; base of the flag array
+        LDI   R0, 2          ; i = 2
+
+outer:
+        MOV   R4, R0
+        MUL   R4, R0         ; i * i
+        CMP   R4, R1
+        JGT   done
+
+        MOV   R5, R2
+        ADD   R5, R0
+        LD    R3, [R5+0]
+        CMPI  R3, 0
+        JNZ   next_i         ; already marked
+
+        MOV   R4, R0
+        MUL   R4, R0         ; j = i * i
+inner:
+        CMP   R4, R1
+        JGT   next_i
+        MOV   R5, R2
+        ADD   R5, R4
+        LDI   R3, 1
+        ST    [R5+0], R3
+        ADD   R4, R0
+        JMP   inner
+
+next_i:
+        INC   R0
+        JMP   outer
+
+done:
+        LDI   R0, 2
+print_loop:
+        CMP   R0, R1
+        JGT   end
+        MOV   R5, R2
+        ADD   R5, R0
+        LD    R3, [R5+0]
+        CMPI  R3, 0
+        JNZ   skip_print
+        OUT   R0
+skip_print:
+        INC   R0
+        JMP   print_loop
+end:
+        HALT

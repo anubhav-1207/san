@@ -1,0 +1,36 @@
+; In-place string reversal, with character output through OUTS.
+
+        .org 0
+        LDI   R0, message
+        OUTS  R0
+        LDI   R5, 10
+        OUTC  R5
+
+        LDI   R1, message    ; left pointer
+        LDI   R2, message    ; right pointer (moves to NUL)
+find_end:
+        LD    R3, [R2+0]
+        CMPI  R3, 0
+        JZ    found
+        INC   R2
+        JMP   find_end
+found:
+        DEC   R2             ; last real character
+reverse:
+        CMP   R1, R2
+        JAE   done
+        LD    R3, [R1+0]
+        LD    R4, [R2+0]
+        ST    [R1+0], R4
+        ST    [R2+0], R3
+        INC   R1
+        DEC   R2
+        JMP   reverse
+done:
+        LDI   R0, message
+        OUTS  R0
+        HALT
+
+        .org 0x0200
+message:
+        .asciz "Hello, SAN-16!"

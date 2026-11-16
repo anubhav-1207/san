@@ -1,0 +1,14 @@
+; First 20 Fibonacci numbers (16-bit wraps after F(24), so 20 is safe).
+
+        .org 0
+        LDI   R0, 0           ; a
+        LDI   R1, 1           ; b
+        LDI   R2, 20          ; count
+loop:
+        OUT   R0
+        MOV   R3, R1
+        ADD   R1, R0
+        MOV   R0, R3
+        DEC   R2
+        JNZ   loop
+        HALT

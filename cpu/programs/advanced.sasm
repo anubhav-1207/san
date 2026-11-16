@@ -1,0 +1,33 @@
+; Indirect calls, carry arithmetic, immediate rotate/shift, PUSHI.
+
+        .org 0
+        LDI   R0, subroutine
+        CALLR R0              ; indirect call
+        OUT   R1              ; 77
+
+        ; 0xFFFF + 1 -> 0, carry set; then ADDC 0, 0 -> 1
+        LDI   R2, 0xFFFF
+        LDI   R3, 1
+        ADD   R2, R3
+        OUTH  R2              ; 0x0000
+        LDI   R4, 0
+        ADDC  R4, R4
+        OUTH  R4              ; 0x0001
+
+        ; ROLI / RORI / SHRSI
+        LDI   R5, 0x8001
+        ROLI  R5, 1
+        OUTH  R5              ; 0x0003
+        RORI  R5, 1
+        OUTH  R5              ; 0x8001
+        SHRSI R5, 1
+        OUTH  R5              ; 0xC000
+
+        PUSHI 1234
+        POP   R6
+        OUT   R6              ; 1234
+        HALT
+
+subroutine:
+        LDI   R1, 77
+        RET

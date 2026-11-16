@@ -1,0 +1,27 @@
+; Signed comparison and input-stream demo.
+; Input queue: 5, 7. Prints 12, then exercises signed branches.
+
+        .input 5, 7
+        .org 0
+        IN    R0
+        IN    R1
+        ADD   R0, R1
+        OUT   R0             ; 12
+
+        LDI   R2, 0xFFFF     ; -1
+        LDI   R3, 1
+        CMP   R2, R3
+        JLT   neg_ok
+        OUTI  1000           ; should be skipped
+neg_ok:
+        CMP   R3, R2
+        JGT   pos_ok
+        OUTI  1001           ; should be skipped
+pos_ok:
+        LDI   R4, 0x8000     ; -32768
+        CMP   R4, R3
+        JLT   min_ok
+        OUTI  1002           ; should be skipped
+min_ok:
+        OUTI  999
+        HALT

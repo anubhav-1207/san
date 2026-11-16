@@ -1,0 +1,14 @@
+; ---------------------------------------------------------------------------
+; Hello, world!  Demonstrates LDI / OUTS / HALT and .asciz strings.
+; ---------------------------------------------------------------------------
+
+        .org 0
+start:
+        LDI   R0, message
+        OUTS  R0
+        LDI   R0, 0
+        HALT
+
+        .org 0x0100
+message:
+        .asciz "Hello from SAN-16!\n"

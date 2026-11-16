@@ -1,0 +1,25 @@
+; Memory demo: store 0..9 at 0x0400, read them back and sum.
+
+        .org 0
+        LDI   R0, 0          ; value
+        LDI   R1, 0x0400     ; pointer
+        LDI   R2, 10         ; count
+store:
+        ST    [R1+0], R0
+        INC   R0
+        INC   R1
+        CMP   R0, R2
+        JLT   store
+
+        LDI   R1, 0x0400
+        LDI   R0, 10
+        LDI   R3, 0          ; sum
+load:
+        LD    R4, [R1+0]
+        ADD   R3, R4
+        INC   R1
+        DEC   R0
+        JNZ   load
+
+        OUT   R3             ; 45
+        HALT

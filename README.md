@@ -191,6 +191,22 @@ Change the `LAYERS` array at the top of the file to try another shape, such as
 `[3, 6, 4, 1]`. The implementation is explained in
 [`docs/neural-network.md`](docs/neural-network.md).
 
+## CPU emulator
+
+[`cpu/`](cpu/README.md) contains SAN-16, a 16-bit CPU emulator and assembler
+toolchain written in San. It exercises memory, stacks, recursion, flags,
+bitwise operations, strings and I/O. Start with:
+
+```bash
+cd cpu
+python3 tools/sanasm.py programs/sieve.sasm --run
+```
+
+The architecture is described in
+[`cpu/docs/architecture.md`](cpu/docs/architecture.md), the instruction set in
+[`cpu/docs/ISA.md`](cpu/docs/ISA.md), and measured timings in
+[`cpu/docs/benchmarks.md`](cpu/docs/benchmarks.md).
+
 # Architecture 
 San consists of the following core components: 
 - **Lexer**: To generate tokens from the raw source code.

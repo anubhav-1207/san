@@ -1,0 +1,9 @@
+.org 0
+ LDI R0, 1000
+ LDI R1, 0
+loop:
+ ADD R1, R0
+ DEC R0
+ JNZ loop
+ OUT R1
+ HALT

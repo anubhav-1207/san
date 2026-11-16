@@ -1,0 +1,12 @@
+; Factorial of 8, iterative. 8! = 40320 fits in 16 bits.
+
+        .org 0
+        LDI   R0, 1          ; i
+        LDI   R1, 1          ; acc
+loop:
+        MUL   R1, R0
+        INC   R0
+        CMPI  R0, 8
+        JLE   loop
+        OUT   R1
+        HALT

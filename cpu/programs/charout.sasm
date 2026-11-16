@@ -1,0 +1,8 @@
+.org 0
+ LDI R0, 65
+ OUTC R0
+ LDI R0, 10
+ OUTC R0
+ LDI R0, 66
+ OUTC R0
+ HALT

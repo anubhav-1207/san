@@ -1,0 +1,22 @@
+; Recursive factorial. 8! = 40320 fits in 16 bits.
+
+        .org 0
+start:
+        LDI   R0, 8
+        CALL  fact
+        OUT   R0
+        HALT
+
+; R0 = factorial(R0)
+fact:
+        CMPI  R0, 1
+        JLE   fact_base
+        PUSH  R0
+        DEC   R0
+        CALL  fact
+        POP   R1
+        MUL   R0, R1
+        RET
+fact_base:
+        LDI   R0, 1
+        RET

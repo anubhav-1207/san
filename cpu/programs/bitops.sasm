@@ -1,0 +1,39 @@
+; Bitwise, shift and rotate demo. Output is hexadecimal.
+
+        .org 0
+        LDI   R0, 0xF0F0
+        LDI   R1, 0x0FF0
+
+        MOV   R2, R0
+        AND   R2, R1
+        OUTH  R2             ; 00F0
+
+        MOV   R2, R0
+        OR    R2, R1
+        OUTH  R2             ; FFF0
+
+        MOV   R2, R0
+        XOR   R2, R1
+        OUTH  R2             ; FF00
+
+        MOV   R2, R0
+        NOT   R2
+        OUTH  R2             ; 0F0F
+
+        LDI   R3, 0x8001
+        SHLI  R3, 1
+        OUTH  R3             ; 0002, carry out
+        SHRI  R3, 1
+        OUTH  R3             ; 0001
+
+        LDI   R3, 0x8001
+        LDI   R5, 1
+        ROR   R3, R5
+        OUTH  R3             ; C000
+        ROL   R3, R5
+        OUTH  R3             ; 8001
+
+        LDI   R4, 0x8000
+        SHRS  R4, R5
+        OUTH  R4             ; C000 (arithmetic)
+        HALT

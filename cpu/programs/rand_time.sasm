@@ -1,0 +1,6 @@
+.org 0
+ RAND R0
+ OUT R0
+ TIME R1
+ OUT R1
+ HALT

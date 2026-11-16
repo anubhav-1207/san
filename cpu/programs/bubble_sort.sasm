@@ -1,0 +1,54 @@
+; Bubble sort of a 10-word array, then print it.
+
+        .org 0
+        LDI   R2, array       ; base
+        LDI   R1, 10          ; n
+        LDI   R0, 0           ; i
+
+outer:
+        CMP   R0, R1
+        JGE   done
+        LDI   R6, 0           ; swapped = false
+        MOV   R7, R1
+        SUB   R7, R0
+        DEC   R7              ; inner limit = n - 1 - i
+        LDI   R3, 0           ; j
+
+inner:
+        CMP   R3, R7
+        JGE   inner_done
+        MOV   R8, R2
+        ADD   R8, R3          ; &a[j]
+        LD    R4, [R8+0]
+        LD    R5, [R8+1]
+        CMP   R5, R4
+        JAE   no_swap         ; a[j] <= a[j+1]
+        ST    [R8+0], R5
+        ST    [R8+1], R4
+        LDI   R6, 1
+no_swap:
+        INC   R3
+        JMP   inner
+inner_done:
+        CMPI  R6, 0
+        JZ    done
+        INC   R0
+        JMP   outer
+
+done:
+        LDI   R0, 0
+print:
+        CMP   R0, R1
+        JGE   end
+        MOV   R8, R2
+        ADD   R8, R0
+        LD    R3, [R8+0]
+        OUT   R3
+        INC   R0
+        JMP   print
+end:
+        HALT
+
+        .org 0x0400
+array:
+        .word 42, 7, 99, 13, 1, 64, 23, 5, 88, 17
