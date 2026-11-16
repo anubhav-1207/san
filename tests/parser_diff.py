@@ -119,10 +119,10 @@ def c_ast(source):
     finally:
         Path(path).unlink()
 
-    lines = [line for line in proc.stdout.splitlines() if not line.startswith("Token(")]
+    lines = [line for line in proc.stdout.splitlines() if line.startswith("(Program ")]
     if not lines:
         raise AssertionError(f"no AST from C parser; stderr: {proc.stderr}")
-    return " ".join(line.strip() for line in lines)
+    return lines[0].strip()
 
 
 def check():
@@ -200,7 +200,8 @@ def check_c_only():
 
 
 def check_elif_chain():
-    source = ("if (a) {\n stdout(1)\n} elif (b) {\n stdout(2)\n} "
+    source = ("dec a = True\ndec b = False\ndec c = False\n"
+              "if (a) {\n stdout(1)\n} elif (b) {\n stdout(2)\n} "
               "elif (c) {\n stdout(3)\n} else {\n stdout(4)\n}")
     proc = run_c(source)
     if proc.stdout.count("(Elif ") != 2 or proc.returncode != 0:

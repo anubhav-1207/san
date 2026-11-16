@@ -44,6 +44,7 @@ typedef enum {
     ERR_INTRPTR005,
     ERR_INTRPTR006,
     ERR_INTRPTR007,
+    ERR_INTRPTR008,
     ERR_COUNT
 } ErrorCode;
 

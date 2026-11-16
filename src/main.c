@@ -3,6 +3,7 @@
 #include "arena.h"
 #include "ast.h"
 #include "error.h"
+#include "interpreter.h"
 #include "lexer.h"
 #include "parser.h"
 #include "table.h"
@@ -14,7 +15,7 @@
 static void print_usage(FILE *stream) {
     fprintf(stream,
             "Usage:\n"
-            "  san <file.san>                  tokenise and parse the file\n"
+            "  san <file.san>                  run the file\n"
             "  san <file.san> explicit         dump tokens and the AST\n"
             "  san --tokens <file.san>         same as 'explicit'\n"
             "  san --help                      show this help\n"
@@ -25,7 +26,7 @@ static void print_usage(FILE *stream) {
             "  severity: FATAL > ERROR > WARNING > INFO\n"
             "  security: CRITICAL > HIGH > MEDIUM > LOW > NONE\n"
             "\n"
-            "Current build stage: lexer + parser.\n");
+            "Current build stage: lexer + parser + interpreter.\n");
 }
 
 static char *read_file(const char *path, size_t *length) {
@@ -135,6 +136,13 @@ int main(int argc, char **argv) {
         }
         ast_print(stdout, program);
         fputc('\n', stdout);
+    }
+
+    if (!diags_has_errors(&diags)) {
+        Interpreter interpreter;
+        interpreter_init(&interpreter, &arena, &diags, &strings, stdin, stdout);
+        interpreter_run(&interpreter, program);
+        interpreter_free(&interpreter);
     }
 
     diags_print(&diags, stderr);

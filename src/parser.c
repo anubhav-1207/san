@@ -27,16 +27,6 @@ static Token *current(Parser *parser) {
     return (Token *)&parser->tokens[parser->pos];
 }
 
-static Token *peek(Parser *parser) {
-    size_t saved = parser->pos;
-    skip_newlines(parser);
-    Token *token = (parser->pos + 1 < parser->count)
-                       ? (Token *)&parser->tokens[parser->pos + 1]
-                       : (Token *)&parser->tokens[parser->count - 1];
-    parser->pos = saved;
-    return token;
-}
-
 static Token *advance_token(Parser *parser) {
     Token *token = current(parser);
     if (parser->pos < parser->count) {
