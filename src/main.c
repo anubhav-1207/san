@@ -1,8 +1,10 @@
 #include "san.h"
 
 #include "arena.h"
+#include "ast.h"
 #include "error.h"
 #include "lexer.h"
+#include "parser.h"
 #include "table.h"
 
 #include <stdio.h>
@@ -12,8 +14,8 @@
 static void print_usage(FILE *stream) {
     fprintf(stream,
             "Usage:\n"
-            "  san <file.san>                  tokenise the file\n"
-            "  san <file.san> explicit         tokenise and dump tokens\n"
+            "  san <file.san>                  tokenise and parse the file\n"
+            "  san <file.san> explicit         dump tokens and the AST\n"
             "  san --tokens <file.san>         same as 'explicit'\n"
             "  san --help                      show this help\n"
             "  san --version                   show the version\n"
@@ -23,7 +25,7 @@ static void print_usage(FILE *stream) {
             "  severity: FATAL > ERROR > WARNING > INFO\n"
             "  security: CRITICAL > HIGH > MEDIUM > LOW > NONE\n"
             "\n"
-            "Current build stage: lexer only.\n");
+            "Current build stage: lexer + parser.\n");
 }
 
 static char *read_file(const char *path, size_t *length) {
@@ -115,6 +117,7 @@ int main(int argc, char **argv) {
     KeywordSet keywords;
     Diagnostics diags;
     Lexer lexer;
+    Parser parser;
 
     arena_init(&arena, 8192);
     strtab_init(&strings, &arena, 128);
@@ -123,11 +126,15 @@ int main(int argc, char **argv) {
     lexer_init(&lexer, source, length, &arena, &strings, &keywords, &diags);
 
     lexer_tokenise(&lexer);
+    parser_init(&parser, lexer.tokens, lexer.count, &arena, &diags);
+    AstNode *program = parser_parse(&parser);
 
     if (dump_tokens) {
         for (size_t i = 0; i < lexer.count; i++) {
             print_token(&lexer.tokens[i]);
         }
+        ast_print(stdout, program);
+        fputc('\n', stdout);
     }
 
     diags_print(&diags, stderr);

@@ -3,7 +3,7 @@ CFLAGS ?= -std=c11 -O2 -Wall -Wextra -Wpedantic
 PREFIX ?= /usr/local
 DESTDIR ?=
 
-SOURCES = src/main.c src/error.c src/arena.c src/table.c src/lexer.c
+SOURCES = src/main.c src/error.c src/arena.c src/table.c src/lexer.c src/ast.c src/parser.c
 OBJECTS = $(SOURCES:src/%.c=build/%.o)
 
 .PHONY: all check install clean
@@ -19,6 +19,7 @@ build/%.o: src/%.c
 
 check: san
 	python3 tests/lexer_diff.py
+	python3 tests/parser_diff.py
 
 install: san
 	install -d $(DESTDIR)$(PREFIX)/bin
