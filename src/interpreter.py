@@ -378,28 +378,29 @@ class Evaluator:
         return value
 
 
+
     def visit_IfNode(self, node: Any) -> Any:
-        if_condition = self.evaluate(node.if_condition)
-        elif_condition = self.evaluate(node.elif_condition) if node.elif_condition is not None else None
-        if self.is_truthy(if_condition):
-            result: Any = None 
+        if self.is_truthy(self.evaluate(node.if_condition)):
+            result = None
             for stmt in node.if_body:
                 result = self.evaluate(stmt)
-            return result 
-        
-        elif elif_condition is not None and self.is_truthy(elif_condition):
-            result = None
-            for stmt in node.elif_body:
-                result = self.evaluate(stmt)
             return result
-        
-        elif node.else_body:
-            result = None
-            if node.else_body:    
-                for stmt in node.else_body:
+
+        for i, cond in enumerate(node.elif_condition):
+            if self.is_truthy(self.evaluate(cond)):
+                result = None
+                for stmt in node.elif_body[i]:
                     result = self.evaluate(stmt)
                 return result
+    
+        if node.else_body:
+            result = None
+            for stmt in node.else_body:
+                result = self.evaluate(stmt)
+                return result
+
         return None
+    
 
 
     def visit_WhileNode(self, node: Any) -> Any:

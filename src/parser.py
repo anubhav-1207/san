@@ -36,16 +36,16 @@ class Parser:
     def __init__(self,tokens):
         self.tokens = tokens 
         self.pos = 0
-        self.current_token = self.tokens[0] if self.tokens else None
+        self.current_token: Tokens = self.tokens[0] if self.tokens else None # type: ignore
 
     #---Advance----------------------------------------------------
     def advance(self):
         """Consumes and returns the current token and advances past it."""
         self.pos += 1
         if self.pos < len(self.tokens):
-            self.current_token = self.tokens[self.pos]
+            self.current_token: Tokens = self.tokens[self.pos]
         else:
-            self.current_token = None
+            self.current_token: Tokens = None # type: ignore
     
     #---Peek-------------------------------------------------------
     def peek(self):
@@ -323,22 +323,24 @@ class Parser:
             if_body = self.parse_blocks()
             if not if_body:
                 raise ControlFLowError("if",self.current_token.line,self.current_token.col)
-            
-            # The following two values are set to None since San allows elif and else to be optional.
-            elif_body = None
-            elif_condition = None 
-            if self.current_token and self.current_token.token_value == 'elif':
-                self.advance()
-                self.expect(TT_LPAREN)
-                elif_condition = self.parse_logical_or()
-                self.expect([TT_RPAREN])
-                elif_body = self.parse_blocks()
 
+            elif_body = []
+            elif_conditions = [] 
+            while True:
+                if self.current_token and self.current_token.token_value == 'elif':
+                    self.advance()
+                    self.expect([TT_LPAREN])
+                    elif_conditions.append(self.parse_logical_or())
+                    self.expect([TT_RPAREN])
+                    elif_body.append(self.parse_blocks()) 
+                else:
+                    break
+            
             else_body = None 
             if self.current_token and self.current_token.token_value == 'else':
                 self.advance()
                 else_body = self.parse_blocks()
-            return IfNode(if_condition,if_body,elif_condition,elif_body,else_body)
+            return IfNode(if_condition,if_body,elif_conditions,elif_body,else_body)
 
         #---WHILE Iterator-----------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'while':
