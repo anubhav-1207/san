@@ -147,6 +147,32 @@ h1 {
     font-family: "JetBrains Mono", "Fira Code", monospace;
 }
 
+/* Bright caret so it stays visible on dark backgrounds and mobile screens */
+.cm-editor .cm-content {
+    caret-color: #ffffff !important;
+}
+
+.cm-editor .cm-cursor,
+.cm-editor .cm-dropCursor {
+    border-left: 2px solid #ffffff !important;
+}
+
+.cm-editor.cm-focused .cm-cursor {
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.85);
+}
+
+/* Fallback newline button, shown on touch devices */
+.mobile-enter {
+    display: none;
+    margin-left: 8px;
+}
+
+@media (pointer: coarse) {
+    .mobile-enter {
+        display: inline-block;
+    }
+}
+
 button {
     background: #6574e8;
     color: white;
@@ -270,6 +296,12 @@ details[open] > summary::before {
         <div id="editor"></div>
 
         <button onclick="runCode()">Run Code</button>
+
+        <button
+            type="button"
+            class="mobile-enter"
+            onclick="insertNewLineButton()"
+        >↵ New line</button>
 
     </div>
 
@@ -534,6 +566,29 @@ const sanHighlight = HighlightStyle.define([
 
 
 // ========================================================
+// NEWLINE HANDLING (desktop + Android soft keyboards)
+// ========================================================
+
+function insertNewLine(view) {
+
+    const state = view.state;
+
+    const line = state.doc.lineAt(
+        state.selection.main.head
+    );
+
+    const indent = line.text.match(/^[ \t]*/)[0];
+
+    view.dispatch(
+        state.replaceSelection("\n" + indent)
+    );
+
+    view.focus();
+
+}
+
+
+// ========================================================
 // EDITOR INITIALIZATION
 // ========================================================
 
@@ -554,6 +609,55 @@ stdout(fibonacci(10));
 `,
 
     extensions: [
+
+        // Handle Enter before the default keymap. Some Android
+        // keyboards don't deliver a normal Enter keydown event.
+        keymap.of([
+
+            {
+                key: "Enter",
+
+                run: (view) => {
+                    insertNewLine(view);
+                    return true;
+                }
+            }
+
+        ]),
+
+        // Android Chrome often reports Enter as a beforeinput
+        // event instead of a keydown event.
+        EditorView.domEventHandlers({
+
+            beforeinput(event, view) {
+
+                if (
+                    event.inputType === "insertLineBreak" ||
+                    event.inputType === "insertParagraph" ||
+                    (
+                        event.inputType === "insertText" &&
+                        event.data === "\n"
+                    )
+                ) {
+                    event.preventDefault();
+                    insertNewLine(view);
+                    return true;
+                }
+
+                return false;
+
+            }
+
+        }),
+
+        // Stop mobile keyboards from autocorrecting or
+        // capitalising code.
+        EditorView.contentAttributes.of({
+            autocapitalize: "off",
+            autocomplete: "off",
+            autocorrect: "off",
+            spellcheck: "false"
+        }),
 
         basicSetup,
 
@@ -598,6 +702,11 @@ stdout(fibonacci(10));
 // Make editor accessible to the rest of the page
 
 window.sanEditor = editor;
+
+// Fallback for keyboards that swallow Enter entirely
+window.insertNewLineButton = () => {
+    insertNewLine(editor);
+};
 
 </script>
 
