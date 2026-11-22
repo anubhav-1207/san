@@ -4,7 +4,7 @@ import io
 
 from src.scanner import Lexer
 from src.parser import Parser
-from src.evaluator import Evaluator
+from src.interpreter import Evaluator
 
 
 app = Flask(__name__)
@@ -550,7 +550,7 @@ func fibonacci(n) {
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-print(fibonacci(10));
+stdout(fibonacci(10));
 `,
 
     extensions: [
@@ -879,10 +879,7 @@ def run():
 
         lexer = Lexer(code)
 
-        tokens, error = lexer.tokenise()
-
-        if error:
-            raise Exception(error)
+        tokens = lexer.tokenise()
 
 
         # Parser
