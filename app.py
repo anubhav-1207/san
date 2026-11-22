@@ -354,20 +354,23 @@ details[open] > summary::before {
 <script type="module">
 
 import { basicSetup } from
-    "https://esm.sh/codemirror@6.0.1";
+    "https://esm.sh/codemirror@6.0.2";
 
+// Keep these versions in sync with the ones basicSetup resolves to.
+// Mixing CodeMirror versions creates separate facet instances and
+// silently disables extensions such as syntax highlighting.
 import { EditorView, keymap } from
-    "https://esm.sh/@codemirror/view@6.36.5";
+    "https://esm.sh/@codemirror/view@6.43.15";
 
 import {
     StreamLanguage,
     HighlightStyle,
     syntaxHighlighting
 } from
-    "https://esm.sh/@codemirror/language@6.10.8";
+    "https://esm.sh/@codemirror/language@6.13.1";
 
 import { tags } from
-    "https://esm.sh/@lezer/highlight@1.2.1";
+    "https://esm.sh/@lezer/highlight@1.2.5";
 
 import { oneDark } from
     "https://esm.sh/@codemirror/theme-one-dark@6.1.2";
@@ -391,6 +394,7 @@ const sanKeywords = new Set([
     "elif",
 
     "loop",
+    "while",
     "for",
     "in",
 
@@ -399,8 +403,12 @@ const sanKeywords = new Set([
 
     "Null",
     "use",
-
+    "scan",
     "scantry",
+
+    "try",
+    "catch",
+    "drop",
 
     "int",
     "float",
@@ -410,10 +418,41 @@ const sanKeywords = new Set([
 
 
 // ========================================================
+// SAN BUILT-IN FUNCTIONS AND CONSTANTS
+// ========================================================
+
+const sanBuiltins = new Set([
+    "acos", "acosh", "append", "asin", "asinh", "atan", "atan2",
+    "atanh", "ceil", "copysign", "cos", "cosh", "degrees", "del",
+    "dist", "e", "emptystr", "exp", "fabs", "factorial", "floor",
+    "frexp", "fsum", "getrange", "inf", "insert", "isqrt", "ldexp",
+    "len", "log", "modf", "nan", "pi", "pop", "power", "prod",
+    "radians", "randint", "random", "randuniform", "remainder",
+    "reverse", "scank", "setfloat", "setint", "setstr", "sin",
+    "sinh", "sqrt", "stdout", "strlen", "structime", "tan", "tanh",
+    "time", "timesleep", "trunc", "tup", "typeof"
+]);
+
+
+// ========================================================
 // SAN LANGUAGE MODE
 // ========================================================
 
 const sanMode = StreamLanguage.define({
+
+    // StreamLanguage uses a legacy token-name table by default, which
+    // does not know about San's "bool" and "builtin" token names.
+    tokenTable: {
+        keyword: tags.keyword,
+        bool: tags.bool,
+        number: tags.number,
+        string: tags.string,
+        comment: tags.comment,
+        operator: tags.operator,
+        punctuation: tags.punctuation,
+        variableName: tags.variableName,
+        builtin: tags.standard(tags.variableName)
+    },
 
     startState() {
         return {
@@ -487,6 +526,10 @@ const sanMode = StreamLanguage.define({
                 return "keyword";
             }
 
+            if (sanBuiltins.has(word)) {
+                return "builtin";
+            }
+
             return "variableName";
         }
 
@@ -555,6 +598,11 @@ const sanHighlight = HighlightStyle.define([
     {
         tag: tags.punctuation,
         color: "#89ddff"
+    },
+
+    {
+        tag: tags.standard(tags.variableName),
+        color: "#82aaff"
     },
 
     {
@@ -661,11 +709,13 @@ stdout(fibonacci(10));
 
         basicSetup,
 
-        oneDark,
-
         sanMode,
 
+        // Keep this before oneDark so San's own colours take precedence
+        // over the theme's generic highlight style.
         syntaxHighlighting(sanHighlight),
+
+        oneDark,
 
         EditorView.theme({
 
