@@ -405,13 +405,25 @@ class Evaluator:
 
     def visit_WhileNode(self, node: Any) -> Any:
         result: Any = None
+        old_env = self.current_env
+
         try:            
             while self.is_truthy(self.evaluate(node.condition)):
-                for stmt in node.while_body:
-                    result = self.evaluate(stmt)        
+                loop_env = Environment(parent=self.current_env)
+                self.current_env = loop_env
+                try:
+                    for stmt in node.while_body:
+                        result = self.evaluate(stmt)
+                except BreakException:
+                    break
+                finally:
+                    self.current_env = old_env
+            return result
         except BreakException:
             pass
-        return result
+        
+        finally:
+            self.current_env = old_env
 
 
     def visit_FuncDefNode(self, node: Any) -> None:

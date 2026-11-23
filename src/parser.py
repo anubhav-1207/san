@@ -325,12 +325,12 @@ class Parser:
                 raise ControlFLowError("if",self.current_token.line,self.current_token.col)
 
             elif_body = []
-            elif_conditions = [] 
+            elif_condition = None
             while True:
                 if self.current_token and self.current_token.token_value == 'elif':
                     self.advance()
                     self.expect([TT_LPAREN])
-                    elif_conditions.append(self.parse_logical_or())
+                    elif_condition = self.parse_logical_or()
                     self.expect([TT_RPAREN])
                     elif_body.append(self.parse_blocks()) 
                 else:
@@ -340,7 +340,10 @@ class Parser:
             if self.current_token and self.current_token.token_value == 'else':
                 self.advance()
                 else_body = self.parse_blocks()
-            return IfNode(if_condition,if_body,elif_conditions,elif_body,else_body)
+            
+            if elif_condition == None:
+                elif_condition = []
+            return IfNode(if_condition,if_body,elif_condition,elif_body,else_body)
 
         #---WHILE Iterator-----------------------------------------------------
         elif self.current_token and self.current_token.token_value == 'while':
