@@ -446,6 +446,7 @@ class Evaluator:
                 if line is None or col is None:
                     line = node.func_name.line
                     col = node.func_name.col
+
                 raise InsufficientFuncArgs(len(func_def.expected_args), line, col)
         
             return func_def.method(evaluated_args)
@@ -454,6 +455,9 @@ class Evaluator:
         for i, param in enumerate(func_def.func_params):
             try:
                 arg_value = self.evaluate(node.func_args[i])
+            except UndefinedVariable:
+                raise 
+
             except Exception:
                 raise InsufficientFuncArgs(len(func_def.func_params), node.func_name.line, node.func_name.col)
             func_env.define(param, arg_value)
