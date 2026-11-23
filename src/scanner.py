@@ -310,10 +310,12 @@ class Lexer:
                     self.advance()
                     self.advance()
 
-                    while self.current_char() is not None and self.current_char() != '*' and self.peek() != '/':
+                    while self.current_char() is not None:
+                        if (self.current_char() == '*' and self.peek() == '/'):
+                            self.advance()
+                            self.advance()
+                            break 
                         self.advance()
-                    self.advance()
-                    self.advance()
                 else:
                     self.add(TT_SLASH,self.line,'/')
                     self.advance()
