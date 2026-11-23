@@ -508,6 +508,8 @@ class Evaluator:
                     result = self.evaluate(stmt)
             
             return result
+        except BreakException:
+            pass
         
         finally:
             self.current_env = previous_env #switch to the previous scope after the loop is done executing
