@@ -1,0 +1,10 @@
+dec j = 0
+while (j < 3) {
+  for i in getrange(0, 2) {
+    stdout(i)
+    break
+  }
+  stdout("iter")
+  flux j = j + 1
+}
+stdout("end")

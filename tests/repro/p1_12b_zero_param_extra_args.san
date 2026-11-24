@@ -1,0 +1,2 @@
+func zero() { return 5 }
+stdout(zero(1, 2))

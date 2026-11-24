@@ -1,0 +1,3 @@
+func ident(x) { return x }
+dec a = [1]
+stdout(ident(a[99]))

@@ -1,0 +1,4 @@
+dec a = [1, 2, 3]
+insert(a, 1, 9)
+dec v = pop(a, 0)
+stdout(v)

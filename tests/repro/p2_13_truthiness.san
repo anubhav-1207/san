@@ -1,0 +1,2 @@
+if ("") { stdout("str-truthy") } else { stdout("str-falsy") }
+if ([]) { stdout("arr-truthy") } else { stdout("arr-falsy") }

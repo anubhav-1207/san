@@ -1,0 +1,4 @@
+if (True) {
+  dec temp = 42
+}
+stdout(temp)

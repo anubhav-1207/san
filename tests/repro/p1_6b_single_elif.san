@@ -1,0 +1,2 @@
+if ((1 == 2)) { stdout("a") }
+elif ((1 == 1)) { stdout("b") }

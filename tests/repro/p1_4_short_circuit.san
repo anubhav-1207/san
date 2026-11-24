@@ -1,0 +1,2 @@
+dec x = 0
+if (x != 0 && 10 / x > 1) { stdout("yes") } else { stdout("no") }

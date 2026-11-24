@@ -1,0 +1,2 @@
+scan(flag: bool)
+stdout(flag)

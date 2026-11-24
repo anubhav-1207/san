@@ -1,0 +1,2 @@
+stdout("a \"quoted\" word")
+stdout("line1\nline2")

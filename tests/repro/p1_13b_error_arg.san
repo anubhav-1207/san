@@ -1,0 +1,2 @@
+func ident(x) { return x }
+stdout(ident(1 / 0))

@@ -1,0 +1,2 @@
+func add(a, b) { return a + b }
+stdout(add(1, 2, 3))

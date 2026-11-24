@@ -1,0 +1,1 @@
+for i in iterrange(0,3) { stdout(i) }

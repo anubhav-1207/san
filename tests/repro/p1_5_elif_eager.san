@@ -1,0 +1,2 @@
+dec x = 1
+if (x == 1) { stdout("if") } elif (nope == 1) { stdout("elif") }

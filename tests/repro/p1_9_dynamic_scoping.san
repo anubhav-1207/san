@@ -1,0 +1,7 @@
+dec x = 1
+func f() { return x }
+func g() {
+  dec x = 2
+  return f()
+}
+stdout(g())

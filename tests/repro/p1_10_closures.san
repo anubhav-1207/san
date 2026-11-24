@@ -1,0 +1,7 @@
+func make() {
+  dec secret = 7
+  return 0
+}
+make()
+func get_secret() { return secret }
+stdout(get_secret())

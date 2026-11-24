@@ -1,0 +1,3 @@
+dec a = [1, 2,]
+stdout(len(a))
+stdout(a[2])

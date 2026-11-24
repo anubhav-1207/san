@@ -1,0 +1,5 @@
+dec b = False
+if (b) { stdout("truthy") } else { stdout("falsy") }
+stdout(!False)
+stdout(True == True)
+stdout(typeof(True))

@@ -1,0 +1,4 @@
+for i in getrange(0, 3) {
+  dec x = i * 2
+  stdout(x)
+}

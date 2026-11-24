@@ -1,0 +1,5 @@
+for i in getrange(0, 3) {
+  stdout(i)
+  break
+}
+stdout("done")

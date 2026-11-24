@@ -1,0 +1,6 @@
+dec n = 0
+while (n < 3) {
+  dec x = n * 2
+  stdout(x)
+  flux n = n + 1
+}

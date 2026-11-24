@@ -1,0 +1,2 @@
+scan(n: int)
+stdout(n + 1)
