@@ -224,7 +224,8 @@ class Parser:
                 elements.append(self.parse_logical_or())
                 while self.current_token and self.current_token.type_ == TT_COMMA:
                     self.expect([TT_COMMA])
-                    elements.append(self.parse_logical_or())
+                    if self.current_token and self.current_token.type_ != TT_RBRACKET:
+                        elements.append(self.parse_logical_or())
             
             self.expect([TT_RBRACKET])
             return ArrayLiteralNode(elements)

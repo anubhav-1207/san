@@ -61,6 +61,11 @@ class InvalidLibraryImported(Exception): #done
     def __init__(self, library: str, line: int, col: int) -> None:
         super().__init__(f"class source.fatal :: no in-built library found named '{library}',\n\t\t---> interpreter exited with error[#INTRPTR007] line:col {line}:{col}")
 
+class OutOfBoundsError(Exception): #done
+    def __init__(self, array: str, line: int, col: int) -> None:
+        super().__init__(f"class source.fatal :: array {array} was accessed out of bounds,\n\t\t---> interpreter exited with error[#INTRPTR008] line:col {line}:{col}")
+
+
 class BreakException(Exception):
     pass
 
@@ -215,11 +220,14 @@ class Evaluator:
         return elements
     
     def visit_IndexingNode(self, node: Any) -> Any:
-        name = node.array
-        name_value = node.array.token_value  # get variable name
-        array = self.current_env.lookup(name)
-        start_index = self.evaluate(node.start_index)
-        return array[start_index]
+        try:
+            name = node.array
+            name_value = node.array.token_value  # get variable name
+            array = self.current_env.lookup(name)
+            start_index = self.evaluate(node.start_index)
+            return array[start_index]
+        except IndexError:
+            raise OutOfBoundsError(node.array.token_value,node.array.line,node.array.col)
     
     def visit_SlicingNode(self, node: Any) -> Any:
         name = node.array
@@ -364,7 +372,6 @@ class Evaluator:
                 raise InvalidTypeConv(node.variable, type_, node.variable.line, node.variable.col)
 
         elif type_ == 'bool':
-            print("hi lol")
             try:
                 value = (user_input)
                 if value not in ('True','False'):
