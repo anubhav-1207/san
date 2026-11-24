@@ -54,8 +54,8 @@ class UnrecognisedBinaryOp(Exception): #done
         super().__init__(f"class source.non-fatal:: unrecognised binary operator encountered - this error was not even possible to occur, if it did, congratulations, you went horribly wrong somewhere. You're on your own now - '{op}' ,\n\t\t---> interpreter exited with error[#INTRPTR006] line:col {line}:{col}")
 
 class InsufficientFuncArgs(Exception): #done
-    def __init__(self, len_of_params: int, line: int, col: int) -> None:
-        super().__init__(f"class source.fatal:: in-built function did not received number of specified arguments ({len_of_params}),\n\t\t---> interpreter exited with error[#INTRPTR007] line:col {line}:{col}")
+    def __init__(self, len_of_params: int, arguments_number: int, line: int, col: int) -> None:
+        super().__init__(f"class source.fatal:: in-built function did not received number of specified arguments ?? \n{len_of_params} were expected. got {arguments_number} instead,\n\t---> interpreter exited with error[#INTRPTR007] line:col {line}:{col}")
 
 class InvalidLibraryImported(Exception): #done
     def __init__(self, library: str, line: int, col: int) -> None:
@@ -442,7 +442,7 @@ class Evaluator:
         #---User Defined Functions----------------------------------
         for i, param in enumerate(func_def.func_params):
             if len(func_def.func_params) != len(node.func_args):
-                raise InsufficientFuncArgs(len(func_def.func_params), node.func_name.line,node.func_name.col)
+                raise InsufficientFuncArgs(len(func_def.func_params),len(node.func_args), node.func_name.line,node.func_name.col)
 
             try:
                 arg_value = self.evaluate(node.func_args[i])
