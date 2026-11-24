@@ -364,8 +364,15 @@ class Evaluator:
                 raise InvalidTypeConv(node.variable, type_, node.variable.line, node.variable.col)
 
         elif type_ == 'bool':
+            print("hi lol")
             try:
-                value = bool(user_input)
+                value = (user_input)
+                if value not in ('True','False'):
+                    raise InvalidTypeConv(node.variable.token_value, type_, node.variable.line, node.variable.col)
+                elif value == "True":
+                    value: bool = True
+                elif value == "False":
+                    value: bool = False
             except ValueError:
                 raise InvalidTypeConv(node.variable, type_, node.variable.line, node.variable.col)
         else:
