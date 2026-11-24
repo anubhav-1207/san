@@ -286,7 +286,7 @@ class Parser:
                 self.expect([self.current_token.type_])
                 var_name_token = self.expect([TT_IDENT])
                 if self.current_token and self.current_token.type_ == TT_COLON:
-                    print("True for type ")
+                    self.advance();self.advance()
                     self.expect([TT_EQ])
                 else:
                     self.expect([TT_EQ])

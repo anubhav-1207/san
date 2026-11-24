@@ -141,7 +141,10 @@ class Environment:
 
         if name_value in self.vars:
             _, is_const = self.vars[name_value]
-            self.vars[name_value] = (value, is_const)
+            if not is_const:
+                self.vars[name_value] = (value, is_const)
+            else:
+                raise ConstantMutation(name_value,name.line,name.col)
         else:
             raise UndefinedVariable(name, name.line, name.col)
             
