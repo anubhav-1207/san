@@ -175,8 +175,6 @@ class Lexer:
                     self.line += 1
                     result.append(self.advance())
                 
-                elif self.current_char() in ('(',')','[',']','{','}'):
-                    raise UnterminatedStringLiteral(self.line,self.col)
                 else:
                     result.append(self.advance())
 
